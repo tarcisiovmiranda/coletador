@@ -20,20 +20,6 @@ function lerCampos(formData: FormData) {
   });
 }
 
-export async function criarLead(formData: FormData): Promise<LeadResult> {
-  const user = await requireUser();
-  const parsed = lerCampos(formData);
-  if (!parsed.success) return { ok: false, erro: parsed.error.issues[0].message };
-
-  // tenant, colaborador e data de criação vêm do servidor, nunca do formulário
-  const lead = await prisma.lead.create({
-    data: { ...parsed.data, tenantId: user.tenantId, colaboradorId: user.id },
-    select: { id: true },
-  });
-  revalidatePath("/coletor");
-  return { ok: true, id: lead.id };
-}
-
 export async function atualizarLead(id: string, formData: FormData): Promise<LeadResult> {
   const user = await requireUser();
   const parsed = lerCampos(formData);

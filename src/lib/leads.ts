@@ -46,30 +46,36 @@ export function cnpjValido(v: string) {
   return calc(v.slice(0, 12)) === Number(v[12]) && calc(v.slice(0, 13)) === Number(v[13]);
 }
 
+// campo ausente/nulo vira "" antes de validar: clientes simples enviam só o que têm
+const opcional = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => (v == null ? "" : v), schema);
+
+const vazioParaNulo = (v: string) => (v === "" ? null : v);
+
 const texto = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Máximo de ${max} caracteres.`)
-    .transform((v) => (v === "" ? null : v));
+  opcional(z.string().trim().max(max, `Máximo de ${max} caracteres.`).transform(vazioParaNulo));
 
 export const leadSchema = z.object({
   nome: z.string().trim().min(2, "Informe o nome.").max(120),
   cargo: texto(120),
   empresa: texto(120),
   inscricao: texto(60),
-  whatsapp: z
-    .string()
-    .trim()
-    .transform((v) => v.replace(/\D/g, ""))
-    .refine((v) => v === "" || (v.length >= 10 && v.length <= 13), "WhatsApp inválido.")
-    .transform((v) => (v === "" ? null : v)),
-  cnpj: z
-    .string()
-    .trim()
-    .transform((v) => v.replace(/\D/g, ""))
-    .refine((v) => v === "" || cnpjValido(v), "CNPJ inválido.")
-    .transform((v) => (v === "" ? null : v)),
+  whatsapp: opcional(
+    z
+      .string()
+      .trim()
+      .transform((v) => v.replace(/\D/g, ""))
+      .refine((v) => v === "" || (v.length >= 10 && v.length <= 13), "WhatsApp inválido.")
+      .transform(vazioParaNulo),
+  ),
+  cnpj: opcional(
+    z
+      .string()
+      .trim()
+      .transform((v) => v.replace(/\D/g, ""))
+      .refine((v) => v === "" || cnpjValido(v), "CNPJ inválido.")
+      .transform(vazioParaNulo),
+  ),
   observacoes: texto(2000),
 });
 

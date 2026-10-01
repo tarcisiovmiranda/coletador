@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { atualizarLead, criarLead } from "@/app/coletor/actions";
+import { atualizarLead } from "@/app/coletor/actions";
+import { leadSchema } from "@/lib/leads";
+import { guardar, remover } from "@/lib/outbox";
+import { sincronizar } from "@/lib/sync";
 import { fmtCnpj, fmtWhats } from "@/lib/leads";
 import { maskCnpj, maskWhats } from "@/lib/masks";
 import { AudioRecorder } from "./audio-recorder";
@@ -27,21 +30,15 @@ const VAZIO: Valores = {
   observacoes: "",
 };
 
-export async function enviarAudioDoLead(id: string, blob: Blob): Promise<string | null> {
-  try {
-    const r = await fetch(`/api/leads/${id}/audio`, {
-      method: "POST",
-      headers: { "Content-Type": (blob.type || "audio/webm").split(";")[0] },
-      body: blob,
-    });
-    if (r.ok) return null;
-    return ((await r.json().catch(() => null)) as { erro?: string } | null)?.erro ?? "Falha no envio do áudio.";
-  } catch {
-    return "Sem conexão para enviar o áudio.";
-  }
-}
-
-export function LeadForm({ leadId, inicial }: { leadId?: string; inicial?: Valores }) {
+export function LeadForm({
+  leadId,
+  inicial,
+  userId,
+}: {
+  leadId?: string;
+  inicial?: Valores;
+  userId?: string; // dono dos leads novos (fila offline)
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -52,16 +49,50 @@ export function LeadForm({ leadId, inicial }: { leadId?: string; inicial?: Valor
   function enviar(formData: FormData) {
     setErro(null);
     start(async () => {
-      const r = leadId ? await atualizarLead(leadId, formData) : await criarLead(formData);
-      if (!r.ok) return setErro(r.erro);
-      // o lead já está salvo; falha no áudio não perde o cadastro
-      let aviso = "";
-      if (audio) {
-        const e = await enviarAudioDoLead(r.id, audio);
-        if (e) aviso = `?audio=${encodeURIComponent(e)}`;
+      if (leadId) {
+        const r = await atualizarLead(leadId, formData);
+        if (!r.ok) return setErro(r.erro);
+        router.push(`/coletor/leads/${r.id}`);
+        router.refresh();
+        return;
       }
-      router.push(`/coletor/leads/${r.id}${aviso}`);
-      router.refresh();
+
+      // Lead novo: valida aqui (funciona sem rede), grava no aparelho PRIMEIRO e só então tenta enviar.
+      // Assim nada se perde se a rede cair, o app fechar ou o celular reiniciar.
+      const campos = Object.fromEntries(
+        [...formData.entries()].filter(([, v]) => typeof v === "string"),
+      ) as Record<string, string>;
+      const ok = leadSchema.safeParse(campos);
+      if (!ok.success) return setErro(ok.error.issues[0].message);
+      if (!userId) return setErro("Sessão inválida. Recarregue a página.");
+
+      const clientId = crypto.randomUUID();
+      try {
+        await guardar({
+          clientId,
+          colaboradorId: userId,
+          campos,
+          audio,
+          audioMime: audio ? (audio.type || "audio/webm").split(";")[0] : null,
+          tentativas: 0,
+          criadoEm: Date.now(),
+        });
+      } catch {
+        return setErro("Não foi possível salvar no aparelho. Verifique o armazenamento do navegador.");
+      }
+
+      const rodada = await sincronizar(userId, clientId);
+      const r = rodada.resultados[clientId];
+      if (r?.status === "enviado") {
+        const aviso = r.avisoAudio ? `?audio=${encodeURIComponent(r.avisoAudio)}` : "";
+        router.push(`/coletor/leads/${r.serverId}${aviso}`);
+        router.refresh();
+      } else if (r?.status === "erro") {
+        await remover(clientId); // recusado pelo servidor: corrija o formulário
+        setErro(r.erro);
+      } else {
+        router.push("/coletor"); // sem rede/sessão: fica na fila e sobe sozinho
+      }
     });
   }
 

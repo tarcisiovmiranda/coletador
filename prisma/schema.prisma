@@ -76,6 +76,8 @@ model Lead {
   etapaKanban   EtapaKanban @default(NOVO) @map("etapa_kanban")
   audioKey      String?     @map("audio_key")
   audioMime     String?     @map("audio_mime")
+  // Gerado no aparelho: garante que reenviar o mesmo lead (rede instável) não duplica
+  clientId      String?     @map("client_id")
   observacoes   String?
   // Preenchido pelo servidor (nunca pelo cliente)
   createdAt     DateTime    @default(now()) @map("created_at")
@@ -85,6 +87,7 @@ model Lead {
   colaborador Colaborador @relation(fields: [colaboradorId], references: [id])
   contrato    Contrato?
 
+  @@unique([tenantId, clientId])
   @@index([tenantId, colaboradorId])
   @@index([tenantId, etapaKanban])
   @@map("leads")

@@ -5,6 +5,7 @@ import { meusLeads } from "@/lib/leads";
 import { fmtCents, toCents } from "@/lib/dinheiro";
 import { AppShell } from "@/components/app-shell";
 import { LeadList } from "@/components/lead-list";
+import { PendentesLista } from "@/components/pendentes-lista";
 
 export default async function ColetorHome() {
   const user = await requireUser();
@@ -50,6 +51,7 @@ export default async function ColetorHome() {
           </div>
         </div>
       )}
+      <PendentesLista userId={user.id} />
       <p className="mb-3 text-sm font-semibold text-slate-600">
         {leads.length} {leads.length === 1 ? "lead captado" : "leads captados"}
       </p>

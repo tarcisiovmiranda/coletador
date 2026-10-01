@@ -1,6 +1,7 @@
-import { logout } from "@/app/login/actions";
 import type { SessionUser } from "@/lib/session";
+import { LogoutButton } from "./logout-button";
 import { NavTabs, type NavItem } from "./nav-tabs";
+import { OfflineSync } from "./offline-sync";
 
 const NAV_ADMIN: NavItem[] = [
   { href: "/admin", label: "Painel" },
@@ -35,13 +36,10 @@ export function AppShell({
             {user.nome} · {user.perfil === "ADMIN" ? "Admin" : "Coletador"}
           </p>
         </div>
-        <form action={logout}>
-          <button type="submit" className="btn btn-ghost !min-h-11 !px-4 !text-base">
-            Sair
-          </button>
-        </form>
+        <LogoutButton userId={user.id} />
       </header>
       <NavTabs items={user.perfil === "ADMIN" ? NAV_ADMIN : NAV_COLETADOR} />
+      <OfflineSync userId={user.id} />
       {children}
     </div>
   );

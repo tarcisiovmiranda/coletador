@@ -7,7 +7,7 @@ export default async function NovoLead() {
   return (
     <AppShell user={user} title="Novo lead">
       <div className="card">
-        <LeadForm />
+        <LeadForm userId={user.id} />
       </div>
     </AppShell>
   );
