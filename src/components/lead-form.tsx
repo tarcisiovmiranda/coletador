@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { atualizarLead } from "@/app/coletor/actions";
 import { leadSchema } from "@/lib/leads";
@@ -8,6 +8,7 @@ import { guardar, remover } from "@/lib/outbox";
 import { sincronizar } from "@/lib/sync";
 import { fmtCnpj, fmtWhats } from "@/lib/leads";
 import { maskCnpj, maskWhats } from "@/lib/masks";
+import { CrachaScanner, type CamposCracha } from "./cracha-scanner";
 import { AudioRecorder } from "./audio-recorder";
 
 type Valores = {
@@ -44,6 +45,30 @@ export function LeadForm({
   const [erro, setErro] = useState<string | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
   const editando = Boolean(leadId);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  /** Preenche só campos vazios (não sobrescreve o que o coletador já digitou) e destaca para conferência. */
+  function preencher(c: CamposCracha): number {
+    const form = formRef.current;
+    if (!form) return 0;
+    const valores: Record<keyof CamposCracha, string> = {
+      nome: c.nome,
+      empresa: c.empresa,
+      cargo: c.cargo,
+      inscricao: c.inscricao,
+      whatsapp: c.whatsapp ? maskWhats(c.whatsapp) : "",
+      cnpj: c.cnpj ? maskCnpj(c.cnpj) : "",
+    };
+    let n = 0;
+    for (const [nome, valor] of Object.entries(valores)) {
+      const el = form.elements.namedItem(nome);
+      if (!(el instanceof HTMLInputElement) || !valor || el.value.trim()) continue;
+      el.value = valor;
+      el.dataset.lido = "1";
+      n++;
+    }
+    return n;
+  }
   const v = inicial ?? VAZIO;
 
   function enviar(formData: FormData) {
@@ -98,12 +123,17 @@ export function LeadForm({
 
   return (
     <form
+      ref={formRef}
+      onInput={(e) => {
+        if (e.target instanceof HTMLElement) delete e.target.dataset.lido; // editou: não precisa mais conferir
+      }}
       onSubmit={(e) => {
         e.preventDefault(); // sem <form action>: o React não limpa os campos quando há erro
         enviar(new FormData(e.currentTarget));
       }}
       className="space-y-3"
     >
+      {!editando && <CrachaScanner onLido={preencher} />}
       <Campo label="Nome *" name="nome" def={v.nome} required autoFocus={!editando} />
       <Campo label="Empresa" name="empresa" def={v.empresa} />
       <Campo label="Cargo" name="cargo" def={v.cargo} />
