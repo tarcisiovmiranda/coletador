@@ -74,6 +74,7 @@ model Lead {
   cnpj          String?
   etapaKanban   EtapaKanban @default(NOVO) @map("etapa_kanban")
   audioKey      String?     @map("audio_key")
+  audioMime     String?     @map("audio_mime")
   observacoes   String?
   // Preenchido pelo servidor (nunca pelo cliente)
   createdAt     DateTime    @default(now()) @map("created_at")

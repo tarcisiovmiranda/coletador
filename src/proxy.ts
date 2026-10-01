@@ -20,7 +20,7 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  const home = perfil === "ADMIN" ? "/admin/equipe" : "/coletor";
+  const home = perfil === "ADMIN" ? "/admin" : "/coletor";
 
   if (pathname === "/login") {
     return perfil ? NextResponse.redirect(new URL(home, req.url)) : NextResponse.next();

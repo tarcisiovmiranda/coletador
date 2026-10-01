@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser, type SessionUser } from "./session";
 
 export function homePorPerfil(perfil: SessionUser["perfil"]) {
-  return perfil === "ADMIN" ? "/admin/equipe" : "/coletor";
+  return perfil === "ADMIN" ? "/admin" : "/coletor";
 }
 
 /** Exige sessão válida. Use no topo de toda página/ação protegida. */
