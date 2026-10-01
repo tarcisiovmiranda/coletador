@@ -13,8 +13,13 @@ let cached: Cfg | null | undefined;
 /** null quando o R2 não está configurado: o lead é salvo mesmo sem áudio. */
 function cfg(): Cfg | null {
   if (cached !== undefined) return cached;
-  const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT } =
-    process.env;
+  // aparar espaços/quebras de linha: copiar e colar costuma trazer um espaço junto
+  const v = (k: string) => process.env[k]?.trim();
+  const R2_ACCOUNT_ID = v("R2_ACCOUNT_ID");
+  const R2_ACCESS_KEY_ID = v("R2_ACCESS_KEY_ID");
+  const R2_SECRET_ACCESS_KEY = v("R2_SECRET_ACCESS_KEY");
+  const R2_BUCKET = v("R2_BUCKET");
+  const R2_ENDPOINT = v("R2_ENDPOINT");
   const endpoint = R2_ENDPOINT || (R2_ACCOUNT_ID && `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`);
   if (!endpoint || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
     cached = null;
