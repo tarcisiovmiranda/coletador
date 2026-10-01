@@ -102,6 +102,7 @@ export function AudioRecorder({ onChange }: { onChange: (b: Blob | null) => void
       )}
       {estado === "pronto" && url && (
         <div className="space-y-2">
+          <p className="text-center text-sm font-semibold text-slate-600">Gravação de {mmss(seg)}</p>
           <audio src={url} controls className="w-full" />
           <button type="button" onClick={refazer} className="btn btn-ghost w-full">
             Regravar

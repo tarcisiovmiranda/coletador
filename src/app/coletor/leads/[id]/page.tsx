@@ -52,7 +52,7 @@ export default async function LeadPage({
     <AppShell user={user} title={lead.nome}>
       {erroAudio && (
         <p role="alert" className="mb-3 rounded-xl bg-amber-50 px-4 py-3 font-medium text-amber-800">
-          Lead salvo, mas o áudio não foi enviado: {erroAudio}. Toque em “Editar” para gravar de novo.
+          Lead salvo, mas o áudio não foi enviado: {erroAudio.replace(/\.$/, "")}. Toque em “Editar” para gravar de novo.
         </p>
       )}
       <div className="card space-y-3">

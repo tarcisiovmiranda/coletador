@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { atualizarLead, criarLead } from "@/app/coletor/actions";
+import { fmtCnpj, fmtWhats } from "@/lib/leads";
+import { maskCnpj, maskWhats } from "@/lib/masks";
 import { AudioRecorder } from "./audio-recorder";
 
 type Valores = {
@@ -74,8 +76,8 @@ export function LeadForm({ leadId, inicial }: { leadId?: string; inicial?: Valor
       <Campo label="Nome *" name="nome" def={v.nome} required autoFocus={!editando} />
       <Campo label="Empresa" name="empresa" def={v.empresa} />
       <Campo label="Cargo" name="cargo" def={v.cargo} />
-      <Campo label="WhatsApp" name="whatsapp" def={v.whatsapp} type="tel" inputMode="tel" ph="(11) 99999-9999" />
-      <Campo label="CNPJ" name="cnpj" def={v.cnpj} inputMode="numeric" ph="00.000.000/0000-00" />
+      <Campo label="WhatsApp" name="whatsapp" def={fmtWhats(v.whatsapp)} type="tel" inputMode="tel" ph="(11) 99999-9999" mask={maskWhats} max={15} />
+      <Campo label="CNPJ" name="cnpj" def={fmtCnpj(v.cnpj)} inputMode="numeric" ph="00.000.000/0000-00" mask={maskCnpj} max={18} />
       <Campo label="Nº de inscrição" name="inscricao" def={v.inscricao} />
       <label className="block">
         <span className="mb-1 block text-sm font-semibold text-slate-700">Observações</span>
@@ -116,6 +118,8 @@ function Campo(p: {
   inputMode?: "tel" | "numeric";
   ph?: string;
   autoFocus?: boolean;
+  mask?: (v: string) => string;
+  max?: number;
 }) {
   return (
     <label className="block">
@@ -129,6 +133,8 @@ function Campo(p: {
         placeholder={p.ph}
         autoFocus={p.autoFocus}
         autoComplete="off"
+        maxLength={p.max}
+        onInput={p.mask ? (e) => (e.currentTarget.value = p.mask!(e.currentTarget.value)) : undefined}
         className="field"
       />
     </label>

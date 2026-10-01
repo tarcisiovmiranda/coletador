@@ -47,8 +47,11 @@ export async function POST(req: Request, { params }: Ctx) {
   const key = `${lead.tenantId}/${lead.id}/${Date.now()}.${ext}`;
   try {
     await enviarAudio(key, bytes, mime);
-  } catch {
-    return NextResponse.json({ erro: "Falha ao salvar o áudio." }, { status: 502 });
+  } catch (e) {
+    console.error("R2: falha ao enviar áudio", e);
+    // só o tipo do erro (ex.: InvalidAccessKeyId, NoSuchBucket): nunca chaves ou endpoint
+    const tipo = e instanceof Error ? e.name : "desconhecido";
+    return NextResponse.json({ erro: `Falha ao salvar o áudio (${tipo})` }, { status: 502 });
   }
 
   await prisma.lead.update({ where: { id: lead.id }, data: { audioKey: key, audioMime: mime } });
