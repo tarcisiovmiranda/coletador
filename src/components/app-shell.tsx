@@ -6,7 +6,9 @@ const NAV_ADMIN: NavItem[] = [
   { href: "/admin", label: "Painel" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/kanban", label: "Kanban" },
+  { href: "/admin/contratos", label: "Contratos" },
   { href: "/admin/equipe", label: "Equipe" },
+  { href: "/admin/config", label: "Config" },
   { href: "/coletor", label: "Meus leads" },
 ];
 

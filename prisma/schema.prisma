@@ -23,9 +23,8 @@ enum EtapaKanban {
 }
 
 enum ContratoStatus {
-  RASCUNHO
-  AGUARDANDO_ASSINATURA
-  ASSINADO
+  PENDENTE
+  APROVADO
   CANCELADO
 }
 
@@ -33,6 +32,8 @@ model Tenant {
   id           String        @id @default(cuid())
   slug         String        @unique
   nome         String
+  // Comissão (%) aplicada sobre o valor de cada contrato novo
+  comissaoPercentual Decimal @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
   createdAt    DateTime      @default(now())
   colaboradores Colaborador[]
   leads        Lead[]
@@ -99,13 +100,13 @@ model Contrato {
   plano                   String
   valor                   Decimal        @db.Decimal(12, 2)
   pagamento               String
-  status                  ContratoStatus @default(RASCUNHO)
-  // Comissão calculada automaticamente (Etapa 2)
+  status                  ContratoStatus @default(PENDENTE)
+  // Comissão calculada automaticamente a partir do percentual do tenant
   comissaoPercentual      Decimal?       @map("comissao_percentual") @db.Decimal(5, 2)
   comissaoValor           Decimal?       @map("comissao_valor") @db.Decimal(12, 2)
-  // Assinatura: chave do arquivo no R2 + momento
-  assinaturaKey           String?        @map("assinatura_key")
-  assinadoEm              DateTime?      @map("assinado_em")
+  // Aprovação interna pelo admin (o cliente não assina nada)
+  aprovadoPorNome         String?        @map("aprovado_por_nome")
+  aprovadoEm              DateTime?      @map("aprovado_em")
   createdAt               DateTime       @default(now()) @map("created_at")
   updatedAt               DateTime       @updatedAt @map("updated_at")
 

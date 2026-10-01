@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { ETAPAS } from "@/lib/leads";
+import { fmtCents, toCents } from "@/lib/dinheiro";
 import { AppShell } from "@/components/app-shell";
 
 // Brasil não tem horário de verão desde 2019: BRT = UTC-3 fixo.
@@ -21,7 +22,7 @@ export default async function AdminPainel() {
   const hoje = inicioDoDiaBRT(new Date());
   const seteDias = new Date(hoje.getTime() - 6 * 24 * 60 * 60 * 1000);
 
-  const [total, hojeCount, comAudio, porEtapa, porColab, equipe, recentes] = await Promise.all([
+  const [total, hojeCount, comAudio, porEtapa, porColab, equipe, recentes, contratos] = await Promise.all([
     prisma.lead.count({ where }),
     prisma.lead.count({ where: { ...where, createdAt: { gte: hoje } } }),
     prisma.lead.count({ where: { ...where, audioKey: { not: null } } }),
@@ -29,7 +30,18 @@ export default async function AdminPainel() {
     prisma.lead.groupBy({ by: ["colaboradorId"], where, _count: { _all: true } }),
     prisma.colaborador.findMany({ where, select: { id: true, nome: true, ativo: true } }),
     prisma.lead.findMany({ where: { ...where, createdAt: { gte: seteDias } }, select: { createdAt: true } }),
+    prisma.contrato.findMany({ where, select: { status: true, valor: true, comissaoValor: true } }),
   ]);
+
+  let vendas = 0;
+  let comissaoAprovada = 0;
+  let pendentes = 0;
+  for (const c of contratos) {
+    if (c.status === "APROVADO") {
+      vendas += toCents(c.valor);
+      comissaoAprovada += toCents(c.comissaoValor);
+    } else if (c.status === "PENDENTE") pendentes += 1;
+  }
 
   const etapaCount = new Map(porEtapa.map((e) => [e.etapaKanban, e._count._all]));
   const nomes = new Map(equipe.map((c) => [c.id, c]));
@@ -52,6 +64,23 @@ export default async function AdminPainel() {
         <Kpi valor={hojeCount} rotulo="Hoje" />
         <Kpi valor={comAudio} rotulo="Com áudio" />
       </div>
+
+      <Link href="/admin/contratos" className="card mt-3 block">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-lg font-extrabold text-slate-900">{fmtCents(vendas)}</p>
+            <p className="text-xs font-semibold text-slate-500">Vendas aprovadas</p>
+          </div>
+          <div>
+            <p className="text-lg font-extrabold text-slate-900">{fmtCents(comissaoAprovada)}</p>
+            <p className="text-xs font-semibold text-slate-500">Comissão a pagar</p>
+          </div>
+          <div>
+            <p className={`text-lg font-extrabold ${pendentes ? "text-amber-700" : "text-slate-900"}`}>{pendentes}</p>
+            <p className="text-xs font-semibold text-slate-500">Para aprovar</p>
+          </div>
+        </div>
+      </Link>
 
       <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Funil</h2>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
