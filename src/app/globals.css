@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-50: #eef6ff;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Alvos de toque grandes: uso em pé, com uma mão, no estande. */
+@layer components {
+  .btn {
+    @apply inline-flex min-h-14 items-center justify-center rounded-2xl px-6 text-lg font-bold transition active:scale-[0.98] disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white active:bg-brand-700;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white active:bg-red-700;
+  }
+  .btn-ghost {
+    @apply bg-slate-100 text-slate-800 active:bg-slate-200;
+  }
+  .field {
+    @apply min-h-14 w-full rounded-2xl border-2 border-slate-300 bg-white px-4 text-lg outline-none focus:border-brand-500;
+  }
+  .card {
+    @apply rounded-3xl border border-slate-200 bg-white p-4 shadow-sm;
+  }
 }
