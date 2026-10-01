@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { requireAdmin, requireUser } from "@/lib/auth";
+import { removerAudio } from "@/lib/storage";
 import { ETAPA_KEYS, escopoLead, leadSchema } from "@/lib/leads";
 
 export type LeadResult = { ok: true; id: string } | { ok: false; erro: string };
@@ -47,4 +48,33 @@ export async function moverEtapa(formData: FormData) {
   });
   revalidatePath("/coletor", "layout");
   revalidatePath("/admin", "layout");
+}
+
+export type ExcluirResult = { ok: true } | { ok: false; erro: string };
+
+/**
+ * Exclui um lead (e o áudio). Só admin.
+ * Lead com contrato pendente/aprovado não pode sair: cancele o contrato antes,
+ * para não apagar histórico de comissão.
+ */
+export async function excluirLead(id: string): Promise<ExcluirResult> {
+  const admin = await requireAdmin();
+  const lead = await prisma.lead.findFirst({
+    where: { id, tenantId: admin.tenantId },
+    select: { id: true, audioKey: true, contrato: { select: { id: true, status: true } } },
+  });
+  if (!lead) return { ok: false, erro: "Lead não encontrado." };
+  if (lead.contrato && lead.contrato.status !== "CANCELADO") {
+    return { ok: false, erro: "Este lead tem contrato ativo. Cancele o contrato antes de excluir." };
+  }
+
+  await prisma.$transaction([
+    ...(lead.contrato ? [prisma.contrato.delete({ where: { id: lead.contrato.id } })] : []),
+    prisma.lead.delete({ where: { id: lead.id } }),
+  ]);
+  if (lead.audioKey) await removerAudio(lead.audioKey).catch(() => {}); // melhor esforço
+
+  revalidatePath("/coletor", "layout");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
 }

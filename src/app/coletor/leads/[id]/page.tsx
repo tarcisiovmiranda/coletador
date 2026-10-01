@@ -6,6 +6,7 @@ import { escopoLead, etapaInfo, fmtCnpj, fmtData, fmtWhats, linkWhats } from "@/
 import { storageConfigurado } from "@/lib/storage";
 import { AppShell } from "@/components/app-shell";
 import { ContratoCard } from "@/components/contrato-card";
+import { ExcluirLead } from "@/components/excluir-lead";
 
 export default async function LeadPage({
   params,
@@ -72,6 +73,7 @@ export default async function LeadPage({
         <Link href="/coletor" className="btn btn-ghost w-full">
           Voltar
         </Link>
+        {user.perfil === "ADMIN" && <ExcluirLead leadId={lead.id} nome={lead.nome} />}
       </div>
     </AppShell>
   );
