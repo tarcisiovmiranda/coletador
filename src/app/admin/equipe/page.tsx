@@ -14,12 +14,16 @@ export default async function EquipePage() {
 
   return (
     <AppShell user={admin} title="Equipe">
-      <NovoColaboradorForm />
+      <div className="lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+      <div className="lg:sticky lg:top-6">
+        <NovoColaboradorForm />
+      </div>
 
-      <h2 className="mb-3 mt-8 text-lg font-bold text-slate-900">
+      <div>
+      <h2 className="mb-3 mt-8 text-lg font-bold text-slate-900 lg:mt-0">
         Colaboradores ({equipe.length})
       </h2>
-      <ul className="space-y-3">
+      <ul className="grid gap-3 2xl:grid-cols-2">
         {equipe.map((c) => (
           <li key={c.id} className={`card ${c.ativo ? "" : "opacity-60"}`}>
             <div className="flex items-start justify-between gap-3">
@@ -43,7 +47,7 @@ export default async function EquipePage() {
                 <input type="hidden" name="id" value={c.id} />
                 <button
                   type="submit"
-                  className={`btn w-full ${c.ativo ? "btn-danger" : "btn-primary"}`}
+                  className={`btn w-full lg:w-auto lg:px-8 ${c.ativo ? "btn-danger" : "btn-primary"}`}
                 >
                   {c.ativo ? "Desativar acesso" : "Reativar acesso"}
                 </button>
@@ -52,6 +56,8 @@ export default async function EquipePage() {
           </li>
         ))}
       </ul>
+      </div>
+      </div>
     </AppShell>
   );
 }

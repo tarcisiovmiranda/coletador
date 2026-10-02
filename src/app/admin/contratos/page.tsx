@@ -48,7 +48,7 @@ export default async function AdminContratos({
   const pct = Number(tenant.comissaoPercentual.toString());
 
   return (
-    <AppShell user={admin} title="Contratos">
+    <AppShell user={admin} title="Contratos" largo>
       {pct === 0 && (
         <Link href="/admin/config" className="mb-4 block rounded-2xl bg-amber-50 px-4 py-3 font-medium text-amber-800">
           O percentual de comissão está em 0%. Toque aqui para definir.
@@ -87,7 +87,7 @@ export default async function AdminContratos({
         </a>
       </div>
 
-      <ul className="space-y-3">
+      <ul className="grid gap-3 xl:grid-cols-2">
         {contratos.length === 0 && <li className="card text-center text-slate-500">Nenhum contrato aqui.</li>}
         {contratos.map((c) => {
           const st = STATUS_CONTRATO[c.status];
@@ -116,7 +116,7 @@ export default async function AdminContratos({
                   Aprovado por {c.aprovadoPorNome} em {fmtData(c.aprovadoEm)}
                 </p>
               )}
-              <div className="grid gap-2 pt-1">
+              <div className="grid gap-2 pt-1 lg:flex lg:flex-wrap">
                 {c.status === "PENDENTE" && <Acao action={aprovarContrato} id={c.id} texto="Aprovar" classe="btn-primary" />}
                 {c.status !== "CANCELADO" && <Acao action={cancelarContrato} id={c.id} texto="Cancelar" classe="btn-danger" />}
                 {c.status === "CANCELADO" && <Acao action={reabrirContrato} id={c.id} texto="Reabrir" classe="btn-ghost" />}
@@ -163,7 +163,7 @@ function Acao({
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className={`btn w-full ${classe}`}>
+      <button type="submit" className={`btn w-full lg:w-auto lg:px-8 ${classe}`}>
         {texto}
       </button>
     </form>

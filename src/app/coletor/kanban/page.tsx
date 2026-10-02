@@ -12,7 +12,7 @@ export default async function ColetorKanban() {
     select: { id: true, nome: true, empresa: true, etapaKanban: true, createdAt: true },
   });
   return (
-    <AppShell user={user} title="Kanban">
+    <AppShell user={user} title="Kanban" largo>
       <KanbanBoard leads={leads} />
     </AppShell>
   );

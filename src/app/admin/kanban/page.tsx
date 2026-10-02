@@ -18,7 +18,7 @@ export default async function AdminKanban() {
     },
   });
   return (
-    <AppShell user={admin} title="Kanban geral">
+    <AppShell user={admin} title="Kanban geral" largo>
       <KanbanBoard leads={leads.map((l) => ({ ...l, colaborador: l.colaborador.nome }))} />
     </AppShell>
   );

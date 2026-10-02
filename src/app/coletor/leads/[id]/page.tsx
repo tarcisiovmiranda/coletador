@@ -35,6 +35,7 @@ export default async function LeadPage({
           Lead salvo, mas o áudio não foi enviado: {erroAudio.replace(/\.$/, "")}. Toque em “Editar” para gravar de novo.
         </p>
       )}
+      <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-6">
       <div className="card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <span className={`rounded-full px-3 py-1 text-sm font-semibold ${e.cor}`}>{e.label}</span>
@@ -57,11 +58,10 @@ export default async function LeadPage({
         )}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 space-y-4 lg:mt-0">
         <ContratoCard leadId={lead.id} contrato={lead.contrato} />
-      </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3">
         {lead.whatsapp && (
           <a href={linkWhats(lead.whatsapp)} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full">
             Abrir WhatsApp
@@ -74,6 +74,8 @@ export default async function LeadPage({
           Voltar
         </Link>
         {user.perfil === "ADMIN" && <ExcluirLead leadId={lead.id} nome={lead.nome} />}
+      </div>
+      </div>
       </div>
     </AppShell>
   );

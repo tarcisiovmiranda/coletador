@@ -6,7 +6,7 @@ export default async function NovoLead() {
   const user = await requireUser();
   return (
     <AppShell user={user} title="Novo lead">
-      <div className="card">
+      <div className="card lg:max-w-3xl">
         <LeadForm userId={user.id} />
       </div>
     </AppShell>

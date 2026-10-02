@@ -18,7 +18,7 @@ export function LeadList({ leads, vazio }: { leads: ItemLead[]; vazio: string })
     return <p className="card text-center text-slate-500">{vazio}</p>;
   }
   return (
-    <ul className="space-y-3">
+    <ul className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
       {leads.map((l) => {
         const e = etapaInfo(l.etapaKanban);
         return (

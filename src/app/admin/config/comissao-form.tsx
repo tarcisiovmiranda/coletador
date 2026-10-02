@@ -6,7 +6,7 @@ import { salvarComissao, type ConfigState } from "@/app/coletor/contratos/action
 export function ComissaoForm({ atual }: { atual: string }) {
   const [state, action, pending] = useActionState<ConfigState, FormData>(salvarComissao, {});
   return (
-    <form action={action} className="card space-y-3">
+    <form action={action} className="card space-y-3 lg:max-w-xl">
       <h2 className="text-lg font-bold text-slate-900">Comissão dos coletadores</h2>
       <p className="text-sm text-slate-600">
         Percentual sobre o valor de cada contrato. Contratos já aprovados não mudam; os pendentes são

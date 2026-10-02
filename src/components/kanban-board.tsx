@@ -15,7 +15,7 @@ export type CardLead = {
 /** Kanban sem arrastar (uso em pé, com uma mão): cada card tem um seletor de etapa. */
 export function KanbanBoard({ leads }: { leads: CardLead[] }) {
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 2xl:grid-cols-6">
       {ETAPAS.map((e) => {
         const lista = leads.filter((l) => l.etapaKanban === e.key);
         return (

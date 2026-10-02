@@ -13,7 +13,7 @@ export default async function EditarLead({ params }: { params: Promise<{ id: str
 
   return (
     <AppShell user={user} title="Editar lead">
-      <div className="card">
+      <div className="card lg:max-w-3xl">
         <LeadForm
           leadId={lead.id}
           inicial={{

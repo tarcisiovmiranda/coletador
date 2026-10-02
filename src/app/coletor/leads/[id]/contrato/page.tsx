@@ -32,7 +32,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
         Lead: <span className="font-bold text-slate-900">{lead.nome}</span>
         {lead.empresa ? ` · ${lead.empresa}` : ""}
       </p>
-      <div className="card">
+      <div className="card lg:max-w-xl">
         {decidido ? (
           <p className="font-medium text-slate-700">
             Este contrato já foi {c.status === "APROVADO" ? "aprovado" : "cancelado"} e não pode ser

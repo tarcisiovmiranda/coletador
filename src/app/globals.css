@@ -22,7 +22,7 @@ body {
 /* Alvos de toque grandes: uso em pé, com uma mão, no estande. */
 @layer components {
   .btn {
-    @apply inline-flex min-h-14 items-center justify-center rounded-2xl px-6 text-lg font-bold transition active:scale-[0.98] disabled:opacity-60;
+    @apply inline-flex min-h-14 items-center justify-center rounded-2xl px-6 text-lg font-bold transition active:scale-[0.98] disabled:opacity-60 lg:min-h-12 lg:rounded-xl lg:text-base;
   }
   .btn-primary {
     @apply bg-brand-600 text-white active:bg-brand-700;
@@ -31,10 +31,10 @@ body {
     @apply bg-red-600 text-white active:bg-red-700;
   }
   .btn-ghost {
-    @apply bg-slate-100 text-slate-800 active:bg-slate-200;
+    @apply bg-slate-100 text-slate-800 active:bg-slate-200 lg:border lg:border-slate-300 lg:hover:bg-slate-200;
   }
   .field {
-    @apply min-h-14 w-full rounded-2xl border-2 border-slate-300 bg-white px-4 text-lg outline-none focus:border-brand-500;
+    @apply min-h-14 w-full rounded-2xl border-2 border-slate-300 bg-white px-4 text-lg outline-none focus:border-brand-500 lg:min-h-12 lg:rounded-xl lg:text-base;
   }
   /* campo preenchido pela leitura do crachá, ainda não conferido */
   .field[data-lido] {

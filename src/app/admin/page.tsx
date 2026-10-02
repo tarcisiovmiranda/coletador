@@ -59,13 +59,14 @@ export default async function AdminPainel() {
 
   return (
     <AppShell user={admin} title="Painel">
+      <div className="lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-3">
       <div className="grid grid-cols-3 gap-3">
         <Kpi valor={total} rotulo="Leads" />
         <Kpi valor={hojeCount} rotulo="Hoje" />
         <Kpi valor={comAudio} rotulo="Com áudio" />
       </div>
 
-      <Link href="/admin/contratos" className="card mt-3 block">
+      <Link href="/admin/contratos" className="card mt-3 block lg:mt-0">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
             <p className="text-lg font-extrabold text-slate-900">{fmtCents(vendas)}</p>
@@ -81,9 +82,10 @@ export default async function AdminPainel() {
           </div>
         </div>
       </Link>
+      </div>
 
       <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Funil</h2>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {ETAPAS.map((e) => (
           <div key={e.key} className={`rounded-2xl px-4 py-3 ${e.cor}`}>
             <p className="text-2xl font-extrabold">{etapaCount.get(e.key) ?? 0}</p>
@@ -92,6 +94,8 @@ export default async function AdminPainel() {
         ))}
       </div>
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+      <div>
       <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Ranking de coletadores</h2>
       <div className="card space-y-3">
         {ranking.length === 0 && <p className="text-slate-500">Ainda sem leads.</p>}
@@ -110,6 +114,9 @@ export default async function AdminPainel() {
         ))}
       </div>
 
+      </div>
+
+      <div>
       <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Últimos 7 dias</h2>
       <div className="card flex h-44 items-end gap-2">
         {porDia.map((d) => (
@@ -121,7 +128,10 @@ export default async function AdminPainel() {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-3">
+      </div>
+      </div>
+
+      <div className="mt-6 grid gap-3 lg:max-w-xl lg:grid-cols-2">
         <Link href="/admin/leads" className="btn btn-ghost w-full">
           Ver todos os leads
         </Link>

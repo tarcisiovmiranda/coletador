@@ -134,12 +134,14 @@ export function LeadForm({
       className="space-y-3"
     >
       {!editando && <CrachaScanner onLido={preencher} />}
+      <div className="grid gap-3 lg:grid-cols-2">
       <Campo label="Nome *" name="nome" def={v.nome} required autoFocus={!editando} />
       <Campo label="Empresa" name="empresa" def={v.empresa} />
       <Campo label="Cargo" name="cargo" def={v.cargo} />
       <Campo label="WhatsApp" name="whatsapp" def={fmtWhats(v.whatsapp)} type="tel" inputMode="tel" ph="(11) 99999-9999" mask={maskWhats} max={15} />
       <Campo label="CNPJ" name="cnpj" def={fmtCnpj(v.cnpj)} inputMode="numeric" ph="00.000.000/0000-00" mask={maskCnpj} max={18} />
       <Campo label="Nº de inscrição" name="inscricao" def={v.inscricao} />
+      </div>
       <label className="block">
         <span className="mb-1 block text-sm font-semibold text-slate-700">Observações</span>
         <textarea
