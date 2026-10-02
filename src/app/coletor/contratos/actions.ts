@@ -132,7 +132,8 @@ export async function cancelarContrato(formData: FormData) {
   if (!id.success) return;
   const where: Prisma.ContratoWhereInput =
     user.perfil === "ADMIN"
-      ? { id: id.data, tenantId: user.tenantId, status: { in: ["PENDENTE", "APROVADO"] } }
+      ? // com a comissão já paga (ou em pagamento) não cancela: o dinheiro já saiu
+        { id: id.data, tenantId: user.tenantId, status: { in: ["PENDENTE", "APROVADO"] }, pagamentoId: null }
       : { id: id.data, tenantId: user.tenantId, colaboradorId: user.id, status: "PENDENTE" };
   await prisma.contrato.updateMany({
     where,

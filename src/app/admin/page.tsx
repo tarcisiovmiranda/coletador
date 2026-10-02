@@ -30,7 +30,7 @@ export default async function AdminPainel() {
     prisma.lead.groupBy({ by: ["colaboradorId"], where, _count: { _all: true } }),
     prisma.colaborador.findMany({ where, select: { id: true, nome: true, ativo: true } }),
     prisma.lead.findMany({ where: { ...where, createdAt: { gte: seteDias } }, select: { createdAt: true } }),
-    prisma.contrato.findMany({ where, select: { status: true, valor: true, comissaoValor: true } }),
+    prisma.contrato.findMany({ where, select: { status: true, valor: true, comissaoValor: true, pagamentoComissao: { select: { status: true } } } }),
   ]);
 
   let vendas = 0;
@@ -39,7 +39,8 @@ export default async function AdminPainel() {
   for (const c of contratos) {
     if (c.status === "APROVADO") {
       vendas += toCents(c.valor);
-      comissaoAprovada += toCents(c.comissaoValor);
+      const pg = c.pagamentoComissao?.status;
+      if (!pg || pg === "FALHOU") comissaoAprovada += toCents(c.comissaoValor); // só o que ainda falta pagar
     } else if (c.status === "PENDENTE") pendentes += 1;
   }
 

@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
+import { mascararChave } from "@/lib/pix";
 import { NovoColaboradorForm } from "./novo-form";
+import { PixForm } from "./pix-form";
 import { desativarColaborador, reativarColaborador } from "./actions";
 
 export default async function EquipePage() {
@@ -9,7 +11,7 @@ export default async function EquipePage() {
   const equipe = await prisma.colaborador.findMany({
     where: { tenantId: admin.tenantId },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-    select: { id: true, nome: true, whatsapp: true, perfil: true, ativo: true },
+    select: { id: true, nome: true, whatsapp: true, perfil: true, ativo: true, pixChave: true, pixTipo: true },
   });
 
   return (
@@ -42,6 +44,7 @@ export default async function EquipePage() {
                 {c.ativo ? "Ativo" : "Desativado"}
               </span>
             </div>
+            <PixForm id={c.id} tipo={c.pixTipo} atual={c.pixChave && c.pixTipo ? mascararChave(c.pixTipo, c.pixChave) : null} />
             {c.id !== admin.id && (
               <form action={c.ativo ? desativarColaborador : reativarColaborador} className="mt-3">
                 <input type="hidden" name="id" value={c.id} />

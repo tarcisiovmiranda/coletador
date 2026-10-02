@@ -4,8 +4,21 @@ import { requireAdmin } from "@/lib/auth";
 import { STATUS_CONTRATO } from "@/lib/contratos";
 import { fmtCents, fmtPercent, toCents } from "@/lib/dinheiro";
 import { fmtData } from "@/lib/leads";
+import { asaasConfigurado, asaasEmProducao } from "@/lib/asaas";
+import { PIX_TIPOS, mascararChave } from "@/lib/pix";
 import { AppShell } from "@/components/app-shell";
+import { PagarPix } from "@/components/pagar-pix";
+import { PagamentoAcoes } from "@/components/pagamento-acoes";
 import { aprovarContrato, cancelarContrato, reabrirContrato } from "@/app/coletor/contratos/actions";
+
+const STATUS_PAGAMENTO = {
+  PROCESSANDO: { label: "Processando", cor: "bg-sky-100 text-sky-800" },
+  CONCLUIDO: { label: "Pago", cor: "bg-emerald-100 text-emerald-800" },
+  FALHOU: { label: "Falhou", cor: "bg-red-100 text-red-800" },
+  VERIFICAR: { label: "Verificar", cor: "bg-amber-100 text-amber-800" },
+} as const;
+
+type Linha = { id: string; nome: string; aPagar: number; emPagamento: number; pago: number; pendente: number; vendas: number };
 
 export default async function AdminContratos({
   searchParams,
@@ -17,35 +30,71 @@ export default async function AdminContratos({
   const filtro = (["PENDENTE", "APROVADO", "CANCELADO"] as const).find((s) => s === status);
 
   const where = { tenantId: admin.tenantId };
-  const [contratos, todos, tenant] = await Promise.all([
+  const [contratos, todos, tenant, pagamentos] = await Promise.all([
     prisma.contrato.findMany({
       where: { ...where, ...(filtro ? { status: filtro } : {}) },
       orderBy: { createdAt: "desc" },
-      include: { lead: { select: { id: true, nome: true, empresa: true } } },
+      include: {
+        lead: { select: { id: true, nome: true, empresa: true } },
+        pagamentoComissao: { select: { status: true, concluidoEm: true } },
+      },
     }),
     prisma.contrato.findMany({
       where,
-      select: { colaboradorId: true, colaboradorNomeSnapshot: true, status: true, valor: true, comissaoValor: true },
+      select: {
+        colaboradorId: true,
+        colaboradorNomeSnapshot: true,
+        status: true,
+        valor: true,
+        comissaoValor: true,
+        pagamentoComissao: { select: { status: true } },
+      },
     }),
     prisma.tenant.findUniqueOrThrow({ where: { id: admin.tenantId }, select: { comissaoPercentual: true } }),
+    prisma.pagamentoComissao.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
   ]);
 
   // totais por colaborador, em centavos inteiros
-  const porColab = new Map<string, { nome: string; aprovado: number; pendente: number; vendas: number }>();
+  const porColab = new Map<string, Linha>();
   for (const c of todos) {
     if (c.status === "CANCELADO") continue;
-    const r = porColab.get(c.colaboradorId) ?? { nome: c.colaboradorNomeSnapshot, aprovado: 0, pendente: 0, vendas: 0 };
+    const r = porColab.get(c.colaboradorId) ?? {
+      id: c.colaboradorId,
+      nome: c.colaboradorNomeSnapshot,
+      aPagar: 0,
+      emPagamento: 0,
+      pago: 0,
+      pendente: 0,
+      vendas: 0,
+    };
+    const cents = toCents(c.comissaoValor);
     if (c.status === "APROVADO") {
-      r.aprovado += toCents(c.comissaoValor);
       r.vendas += toCents(c.valor);
-    } else r.pendente += toCents(c.comissaoValor);
+      const p = c.pagamentoComissao?.status;
+      if (!p || p === "FALHOU") r.aPagar += cents;
+      else if (p === "CONCLUIDO") r.pago += cents;
+      else r.emPagamento += cents;
+    } else r.pendente += cents;
     porColab.set(c.colaboradorId, r);
   }
-  const linhas = [...porColab.values()].sort((a, b) => b.aprovado - a.aprovado);
-  const totalAprovado = linhas.reduce((s, r) => s + r.aprovado, 0);
-  const totalVendas = linhas.reduce((s, r) => s + r.vendas, 0);
-  const totalPendente = linhas.reduce((s, r) => s + r.pendente, 0);
+  const linhas = [...porColab.values()].sort((a, b) => b.aPagar - a.aPagar);
+  const soma = (k: keyof Omit<Linha, "id" | "nome">) => linhas.reduce((s, r) => s + r[k], 0);
   const pct = Number(tenant.comissaoPercentual.toString());
+
+  const pixConfigurado = asaasConfigurado();
+  const teste = !asaasEmProducao();
+  const chaves = new Map(
+    (
+      await prisma.colaborador.findMany({
+        where: { tenantId: admin.tenantId, id: { in: linhas.map((l) => l.id) } },
+        select: { id: true, pixChave: true, pixTipo: true },
+      })
+    ).map((c) => [c.id, c]),
+  );
 
   return (
     <AppShell user={admin} title="Contratos" largo>
@@ -55,25 +104,96 @@ export default async function AdminContratos({
         </Link>
       )}
 
-      <div className="grid grid-cols-3 gap-3">
-        <Kpi valor={fmtCents(totalVendas)} rotulo="Vendas aprovadas" />
-        <Kpi valor={fmtCents(totalAprovado)} rotulo="Comissão a pagar" />
-        <Kpi valor={fmtCents(totalPendente)} rotulo="Comissão pendente" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi valor={fmtCents(soma("vendas"))} rotulo="Vendas aprovadas" />
+        <Kpi valor={fmtCents(soma("aPagar"))} rotulo="Comissão a pagar" />
+        <Kpi valor={fmtCents(soma("pago"))} rotulo="Comissão já paga" />
+        <Kpi valor={fmtCents(soma("pendente"))} rotulo="Comissão pendente" />
       </div>
 
-      <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Comissão por coletador</h2>
-      <div className="card space-y-2">
-        {linhas.length === 0 && <p className="text-slate-500">Nenhum contrato ainda.</p>}
-        {linhas.map((r) => (
-          <div key={r.nome} className="flex items-baseline justify-between gap-3">
-            <span className="truncate font-semibold text-slate-800">{r.nome}</span>
-            <span className="shrink-0 text-right text-sm">
-              <span className="font-bold text-slate-900">{fmtCents(r.aprovado)}</span>
-              {r.pendente > 0 && <span className="text-amber-700"> +{fmtCents(r.pendente)} pend.</span>}
-            </span>
-          </div>
-        ))}
+      <div className="mb-2 mt-6 flex flex-wrap items-center gap-2">
+        <h2 className="text-lg font-bold text-slate-900">Comissão por coletador</h2>
+        {pixConfigured(pixConfigurado, teste)}
       </div>
+      <div className="card divide-y divide-slate-100 !p-0">
+        {linhas.length === 0 && <p className="p-4 text-slate-500">Nenhum contrato ainda.</p>}
+        {linhas.map((r) => {
+          const ch = chaves.get(r.id);
+          const tipoLabel = PIX_TIPOS.find((t) => t.key === ch?.pixTipo)?.label ?? "";
+          return (
+            <div key={r.id} className="space-y-2 p-4 lg:flex lg:items-center lg:justify-between lg:gap-6 lg:space-y-0">
+              <div className="min-w-0">
+                <p className="truncate text-lg font-bold text-slate-900">{r.nome}</p>
+                <p className="text-sm text-slate-600">
+                  A pagar <span className="font-bold text-slate-900">{fmtCents(r.aPagar)}</span>
+                  {r.emPagamento > 0 && <span className="text-sky-700"> · em pagamento {fmtCents(r.emPagamento)}</span>}
+                  {r.pago > 0 && <span className="text-emerald-700"> · pago {fmtCents(r.pago)}</span>}
+                  {r.pendente > 0 && <span className="text-amber-700"> · pendente {fmtCents(r.pendente)}</span>}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {ch?.pixChave && ch.pixTipo ? (
+                    <>
+                      Pix ({tipoLabel}): {mascararChave(ch.pixTipo, ch.pixChave)}
+                    </>
+                  ) : (
+                    <Link href="/admin/equipe" className="font-semibold text-amber-700 underline">
+                      Sem chave Pix: cadastrar em Equipe
+                    </Link>
+                  )}
+                </p>
+              </div>
+              {pixConfigurado && r.aPagar > 0 && ch?.pixChave && ch.pixTipo && (
+                <div className="lg:shrink-0">
+                  <PagarPix
+                    colaboradorId={r.id}
+                    nome={r.nome}
+                    valor={fmtCents(r.aPagar)}
+                    tipo={tipoLabel}
+                    chave={mascararChave(ch.pixTipo, ch.pixChave)}
+                    teste={teste}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {pagamentos.length > 0 && (
+        <>
+          <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Pagamentos de comissão</h2>
+          <ul className="grid gap-3 xl:grid-cols-2">
+            {pagamentos.map((p) => {
+              const st = STATUS_PAGAMENTO[p.status];
+              return (
+                <li key={p.id} className="card space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-bold text-slate-900">
+                        {fmtCents(toCents(p.valor))} · {p.colaboradorNomeSnapshot}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {fmtData(p.createdAt)} · por {p.criadoPorNome}
+                        {p.concluidoEm ? ` · pago em ${fmtData(p.concluidoEm)}` : ""}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${st.cor}`}>{st.label}</span>
+                  </div>
+                  {p.erro && <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">{p.erro}</p>}
+                  {p.comprovanteUrl && (
+                    <a href={p.comprovanteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-brand-600">
+                      Ver comprovante
+                    </a>
+                  )}
+                  {(p.status === "PROCESSANDO" || p.status === "VERIFICAR") && (
+                    <PagamentoAcoes id={p.id} status={p.status} nome={p.colaboradorNomeSnapshot} valor={fmtCents(toCents(p.valor))} />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
 
       <div className="mb-3 mt-6 flex items-center justify-between gap-3">
         <div className="flex gap-2 overflow-x-auto">
@@ -91,6 +211,9 @@ export default async function AdminContratos({
         {contratos.length === 0 && <li className="card text-center text-slate-500">Nenhum contrato aqui.</li>}
         {contratos.map((c) => {
           const st = STATUS_CONTRATO[c.status];
+          const pg = c.pagamentoComissao?.status;
+          const comissaoPaga = pg === "CONCLUIDO";
+          const emPagamento = pg === "PROCESSANDO" || pg === "VERIFICAR";
           return (
             <li key={c.id} className="card space-y-2">
               <div className="flex items-start justify-between gap-3">
@@ -116,9 +239,16 @@ export default async function AdminContratos({
                   Aprovado por {c.aprovadoPorNome} em {fmtData(c.aprovadoEm)}
                 </p>
               )}
+              {(comissaoPaga || emPagamento) && (
+                <p className={`text-sm font-semibold ${comissaoPaga ? "text-emerald-700" : "text-sky-700"}`}>
+                  {comissaoPaga ? "Comissão paga por Pix" : "Pagamento da comissão em andamento"}
+                </p>
+              )}
               <div className="grid gap-2 pt-1 lg:flex lg:flex-wrap">
                 {c.status === "PENDENTE" && <Acao action={aprovarContrato} id={c.id} texto="Aprovar" classe="btn-primary" />}
-                {c.status !== "CANCELADO" && <Acao action={cancelarContrato} id={c.id} texto="Cancelar" classe="btn-danger" />}
+                {c.status !== "CANCELADO" && !c.pagamentoId && (
+                  <Acao action={cancelarContrato} id={c.id} texto="Cancelar" classe="btn-danger" />
+                )}
                 {c.status === "CANCELADO" && <Acao action={reabrirContrato} id={c.id} texto="Reabrir" classe="btn-ghost" />}
               </div>
             </li>
@@ -126,6 +256,17 @@ export default async function AdminContratos({
         })}
       </ul>
     </AppShell>
+  );
+}
+
+function pixConfigured(configurado: boolean, teste: boolean) {
+  if (!configurado) {
+    return <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-700">Pix não configurado</span>;
+  }
+  return teste ? (
+    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Pix em TESTE (sem dinheiro real)</span>
+  ) : (
+    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">Pix em PRODUÇÃO (dinheiro real)</span>
   );
 }
 

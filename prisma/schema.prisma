@@ -22,6 +22,21 @@ enum EtapaKanban {
   PERDIDO
 }
 
+enum PixTipo {
+  CPF
+  CNPJ
+  EMAIL
+  PHONE
+  EVP
+}
+
+enum PagamentoStatus {
+  PROCESSANDO
+  CONCLUIDO
+  FALHOU
+  VERIFICAR
+}
+
 enum ContratoStatus {
   PENDENTE
   APROVADO
@@ -29,15 +44,16 @@ enum ContratoStatus {
 }
 
 model Tenant {
-  id           String        @id @default(cuid())
-  slug         String        @unique
-  nome         String
+  id                 String              @id @default(cuid())
+  slug               String              @unique
+  nome               String
   // Comissão (%) aplicada sobre o valor de cada contrato novo
-  comissaoPercentual Decimal @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
-  createdAt    DateTime      @default(now())
-  colaboradores Colaborador[]
-  leads        Lead[]
-  contratos    Contrato[]
+  comissaoPercentual Decimal             @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
+  createdAt          DateTime            @default(now())
+  colaboradores      Colaborador[]
+  leads              Lead[]
+  contratos          Contrato[]
+  pagamentos         PagamentoComissao[]
 
   @@map("tenants")
 }
@@ -51,12 +67,16 @@ model Colaborador {
   // HMAC-SHA256 do código pessoal (nunca guardamos o código em claro)
   codigoHash String   @map("codigo_hash")
   ativo      Boolean  @default(true)
+  // Chave Pix para receber a comissão (só o admin cadastra)
+  pixChave   String?  @map("pix_chave")
+  pixTipo    PixTipo? @map("pix_tipo")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id])
-  leads     Lead[]
-  contratos Contrato[]
+  tenant     Tenant              @relation(fields: [tenantId], references: [id])
+  leads      Lead[]
+  contratos  Contrato[]
+  pagamentos PagamentoComissao[]
 
   @@unique([tenantId, codigoHash])
   @@index([tenantId, perfil])
@@ -110,14 +130,45 @@ model Contrato {
   // Aprovação interna pelo admin (o cliente não assina nada)
   aprovadoPorNome         String?        @map("aprovado_por_nome")
   aprovadoEm              DateTime?      @map("aprovado_em")
+  // Pagamento da comissão (Pix) que quitou este contrato; null = ainda não pago
+  pagamentoId             String?        @map("pagamento_id")
   createdAt               DateTime       @default(now()) @map("created_at")
   updatedAt               DateTime       @updatedAt @map("updated_at")
 
-  tenant      Tenant      @relation(fields: [tenantId], references: [id])
-  lead        Lead        @relation(fields: [leadId], references: [id])
-  colaborador Colaborador @relation(fields: [colaboradorId], references: [id])
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  lead              Lead               @relation(fields: [leadId], references: [id])
+  colaborador       Colaborador        @relation(fields: [colaboradorId], references: [id])
+  pagamentoComissao PagamentoComissao? @relation(fields: [pagamentoId], references: [id])
 
   @@index([tenantId, colaboradorId])
   @@index([tenantId, status])
+  @@index([pagamentoId])
   @@map("contratos")
+}
+
+model PagamentoComissao {
+  id                      String          @id @default(cuid())
+  tenantId                String          @map("tenant_id")
+  colaboradorId           String          @map("colaborador_id")
+  colaboradorNomeSnapshot String          @map("colaborador_nome_snapshot")
+  valor                   Decimal         @db.Decimal(12, 2)
+  status                  PagamentoStatus @default(PROCESSANDO)
+  // Chave usada no momento do pagamento (histórico imutável)
+  pixChave                String          @map("pix_chave")
+  pixTipo                 PixTipo         @map("pix_tipo")
+  asaasTransferId         String?         @unique @map("asaas_transfer_id")
+  comprovanteUrl          String?         @map("comprovante_url")
+  erro                    String?
+  criadoPorNome           String          @map("criado_por_nome")
+  concluidoEm             DateTime?       @map("concluido_em")
+  createdAt               DateTime        @default(now()) @map("created_at")
+  updatedAt               DateTime        @updatedAt @map("updated_at")
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  colaborador Colaborador @relation(fields: [colaboradorId], references: [id])
+  contratos   Contrato[]
+
+  @@index([tenantId, colaboradorId])
+  @@index([tenantId, status])
+  @@map("pagamentos_comissao")
 }

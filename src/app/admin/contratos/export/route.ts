@@ -23,10 +23,13 @@ export async function GET() {
   const contratos = await prisma.contrato.findMany({
     where: { tenantId: user.tenantId },
     orderBy: { createdAt: "asc" },
-    include: { lead: { select: { nome: true, empresa: true, cnpj: true } } },
+    include: {
+      lead: { select: { nome: true, empresa: true, cnpj: true } },
+      pagamentoComissao: { select: { status: true, concluidoEm: true } },
+    },
   });
 
-  const cab = ["Criado em", "Coletador", "Lead", "Empresa", "CNPJ", "Plano", "Valor (R$)", "Pagamento", "Status", "Comissão %", "Comissão (R$)", "Aprovado por", "Aprovado em"];
+  const cab = ["Criado em", "Coletador", "Lead", "Empresa", "CNPJ", "Plano", "Valor (R$)", "Pagamento", "Status", "Comissão %", "Comissão (R$)", "Aprovado por", "Aprovado em", "Comissão paga (Pix)"];
   const linhas = contratos.map((c) =>
     [
       dataBRT(c.createdAt),
@@ -42,6 +45,11 @@ export async function GET() {
       reais(toCents(c.comissaoValor)),
       c.aprovadoPorNome,
       dataBRT(c.aprovadoEm),
+      c.pagamentoComissao?.status === "CONCLUIDO"
+        ? `Paga em ${dataBRT(c.pagamentoComissao.concluidoEm)}`
+        : c.pagamentoComissao && c.pagamentoComissao.status !== "FALHOU"
+          ? "Em andamento"
+          : "Não",
     ]
       .map(celula)
       .join(";"),

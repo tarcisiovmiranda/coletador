@@ -25,13 +25,16 @@ export default async function ColetorHome() {
 
   const contratos = await prisma.contrato.findMany({
     where: { tenantId: user.tenantId, colaboradorId: user.id, status: { not: "CANCELADO" } },
-    select: { status: true, comissaoValor: true },
+    select: { status: true, comissaoValor: true, pagamentoComissao: { select: { status: true } } },
   });
   let aprovada = 0;
   let pendente = 0;
+  let recebida = 0;
   for (const c of contratos) {
-    if (c.status === "APROVADO") aprovada += toCents(c.comissaoValor);
-    else pendente += toCents(c.comissaoValor);
+    if (c.status === "APROVADO") {
+      if (c.pagamentoComissao?.status === "CONCLUIDO") recebida += toCents(c.comissaoValor);
+      else aprovada += toCents(c.comissaoValor);
+    } else pendente += toCents(c.comissaoValor);
   }
 
   return (
@@ -40,11 +43,17 @@ export default async function ColetorHome() {
         + Novo lead
       </Link>
       {contratos.length > 0 && (
-        <div className="card mb-4 grid grid-cols-2 gap-3 text-center">
+        <div className={`card mb-4 grid gap-3 text-center ${recebida > 0 ? "grid-cols-3" : "grid-cols-2"}`}>
           <div>
             <p className="text-xl font-extrabold text-emerald-700">{fmtCents(aprovada)}</p>
-            <p className="text-xs font-semibold text-slate-500">Comissão aprovada</p>
+            <p className="text-xs font-semibold text-slate-500">Aprovada, a receber</p>
           </div>
+          {recebida > 0 && (
+            <div>
+              <p className="text-xl font-extrabold text-sky-700">{fmtCents(recebida)}</p>
+              <p className="text-xs font-semibold text-slate-500">Já recebida (Pix)</p>
+            </div>
+          )}
           <div>
             <p className="text-xl font-extrabold text-amber-700">{fmtCents(pendente)}</p>
             <p className="text-xs font-semibold text-slate-500">Aguardando aprovação</p>
