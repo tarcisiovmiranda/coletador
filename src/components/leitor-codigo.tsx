@@ -21,11 +21,26 @@ const FORMATOS = [
   BarcodeFormat.AZTEC,
 ];
 
+const NOME_FORMATO: Record<number, string> = {
+  [BarcodeFormat.QR_CODE]: "QR Code",
+  [BarcodeFormat.CODE_128]: "Code 128",
+  [BarcodeFormat.CODE_39]: "Code 39",
+  [BarcodeFormat.CODE_93]: "Code 93",
+  [BarcodeFormat.EAN_13]: "EAN-13",
+  [BarcodeFormat.EAN_8]: "EAN-8",
+  [BarcodeFormat.UPC_A]: "UPC-A",
+  [BarcodeFormat.ITF]: "ITF",
+  [BarcodeFormat.CODABAR]: "Codabar",
+  [BarcodeFormat.PDF_417]: "PDF417",
+  [BarcodeFormat.DATA_MATRIX]: "Data Matrix",
+  [BarcodeFormat.AZTEC]: "Aztec",
+};
+
 type Estado =
   | { tipo: "parado" }
   | { tipo: "abrindo" }
   | { tipo: "lendo" }
-  | { tipo: "ok"; codigo: string; n: number; soNumero: boolean }
+  | { tipo: "ok"; codigo: string; n: number; soNumero: boolean; formato: string }
   | { tipo: "erro"; msg: string };
 
 /**
@@ -114,7 +129,8 @@ export function LeitorCodigo({ onLido }: { onLido: (texto: string) => number }) 
           const n = onLido(texto);
           // código curto = só um identificador (os dados da pessoa ficam no cadastro da feira, não nas barras)
           const soNumero = Object.keys(interpretarCodigo(texto)).every((k) => k === "inscricao");
-          setEstado({ tipo: "ok", codigo: texto, n, soNumero });
+          const formato = NOME_FORMATO[resultado.getBarcodeFormat()] ?? "código";
+          setEstado({ tipo: "ok", codigo: texto, n, soNumero, formato });
         },
       );
       clearTimeout(limite);
@@ -152,7 +168,7 @@ export function LeitorCodigo({ onLido }: { onLido: (texto: string) => number }) 
 
       {estado.tipo === "ok" && (
         <p role="status" className="break-all text-center text-sm font-semibold text-emerald-800">
-          Código lido: {estado.codigo.length > 60 ? estado.codigo.slice(0, 60) + "…" : estado.codigo}
+          Código lido: {estado.codigo.length > 60 ? estado.codigo.slice(0, 60) + "…" : estado.codigo} ({estado.formato})
           {estado.n > 0 ? ` · ${estado.n} ${estado.n === 1 ? "campo preenchido" : "campos preenchidos"}` : " · nada novo para preencher"}
         </p>
       )}
@@ -160,6 +176,11 @@ export function LeitorCodigo({ onLido }: { onLido: (texto: string) => number }) 
         <p className="text-center text-xs text-slate-600">
           Este código traz só o nº de inscrição. Para nome, empresa e cargo, use também “Ler crachá com a câmera”.
         </p>
+      )}
+      {estado.tipo === "ok" && (
+        <button type="button" onClick={abrir} className="mx-auto block text-sm font-bold text-brand-600 underline">
+          O crachá tem outro código (QR)? Ler outro
+        </button>
       )}
       {estado.tipo === "erro" && (
         <p role="alert" className="text-center text-sm font-semibold text-red-700">
