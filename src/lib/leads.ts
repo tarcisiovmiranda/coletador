@@ -51,6 +51,7 @@ const opcional = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (v == null ? "" : v), schema);
 
 const vazioParaNulo = (v: string) => (v === "" ? null : v);
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const texto = (max: number) =>
   opcional(z.string().trim().max(max, `Máximo de ${max} caracteres.`).transform(vazioParaNulo));
@@ -66,6 +67,15 @@ export const leadSchema = z.object({
       .trim()
       .transform((v) => v.replace(/\D/g, ""))
       .refine((v) => v === "" || (v.length >= 10 && v.length <= 13), "WhatsApp inválido.")
+      .transform(vazioParaNulo),
+  ),
+  email: opcional(
+    z
+      .string()
+      .trim()
+      .toLowerCase()
+      .max(120, "E-mail longo demais.")
+      .refine((v) => v === "" || EMAIL.test(v), "E-mail inválido.")
       .transform(vazioParaNulo),
   ),
   cnpj: opcional(

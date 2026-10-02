@@ -22,6 +22,7 @@ export default async function EditarLead({ params }: { params: Promise<{ id: str
             empresa: lead.empresa ?? "",
             inscricao: lead.inscricao ?? "",
             whatsapp: lead.whatsapp ?? "",
+            email: lead.email ?? "",
             cnpj: lead.cnpj ?? "",
             observacoes: lead.observacoes ?? "",
           }}

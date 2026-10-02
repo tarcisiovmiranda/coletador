@@ -8,7 +8,9 @@ import { guardar, remover } from "@/lib/outbox";
 import { sincronizar } from "@/lib/sync";
 import { fmtCnpj, fmtWhats } from "@/lib/leads";
 import { maskCnpj, maskWhats } from "@/lib/masks";
-import { CrachaScanner, type CamposCracha } from "./cracha-scanner";
+import { interpretarCodigo } from "@/lib/codigo-cracha";
+import { CrachaScanner } from "./cracha-scanner";
+import { LeitorCodigo } from "./leitor-codigo";
 import { AudioRecorder } from "./audio-recorder";
 
 type Valores = {
@@ -17,6 +19,7 @@ type Valores = {
   empresa: string;
   inscricao: string;
   whatsapp: string;
+  email: string;
   cnpj: string;
   observacoes: string;
 };
@@ -27,6 +30,7 @@ const VAZIO: Valores = {
   empresa: "",
   inscricao: "",
   whatsapp: "",
+  email: "",
   cnpj: "",
   observacoes: "",
 };
@@ -47,23 +51,23 @@ export function LeadForm({
   const editando = Boolean(leadId);
   const formRef = useRef<HTMLFormElement>(null);
 
-  /** Preenche só campos vazios (não sobrescreve o que o coletador já digitou) e destaca para conferência. */
-  function preencher(c: CamposCracha): number {
+  /**
+   * Preenche campos vindos de uma leitura (foto do crachá ou código de barras) e destaca para conferência.
+   * Não sobrescreve o que o coletador digitou; campos que vieram de uma leitura anterior podem ser
+   * trocados (ler outro crachá substitui os dados do primeiro).
+   */
+  function preencher(c: Partial<Record<string, string>>): number {
     const form = formRef.current;
     if (!form) return 0;
-    const valores: Record<keyof CamposCracha, string> = {
-      nome: c.nome,
-      empresa: c.empresa,
-      cargo: c.cargo,
-      inscricao: c.inscricao,
-      whatsapp: c.whatsapp ? maskWhats(c.whatsapp) : "",
-      cnpj: c.cnpj ? maskCnpj(c.cnpj) : "",
-    };
+    const mascara: Record<string, (v: string) => string> = { whatsapp: maskWhats, cnpj: maskCnpj };
     let n = 0;
-    for (const [nome, valor] of Object.entries(valores)) {
+    for (const [nome, valor] of Object.entries(c)) {
       const el = form.elements.namedItem(nome);
-      if (!(el instanceof HTMLInputElement) || !valor || el.value.trim()) continue;
-      el.value = valor;
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) || !valor) continue;
+      if (el.value.trim() && el.dataset.lido !== "1") continue;
+      const novo = mascara[nome] ? mascara[nome](valor) : valor;
+      if (el.value === novo) continue;
+      el.value = novo;
       el.dataset.lido = "1";
       n++;
     }
@@ -133,12 +137,15 @@ export function LeadForm({
       }}
       className="space-y-3"
     >
-      {!editando && <CrachaScanner onLido={preencher} />}
+      {!editando && (
+        <CrachaScanner onLido={preencher} extra={<LeitorCodigo onLido={(texto) => preencher(interpretarCodigo(texto))} />} />
+      )}
       <div className="grid gap-3 lg:grid-cols-2">
       <Campo label="Nome *" name="nome" def={v.nome} required autoFocus={!editando} />
       <Campo label="Empresa" name="empresa" def={v.empresa} />
       <Campo label="Cargo" name="cargo" def={v.cargo} />
       <Campo label="WhatsApp" name="whatsapp" def={fmtWhats(v.whatsapp)} type="tel" inputMode="tel" ph="(11) 99999-9999" mask={maskWhats} max={15} />
+      <Campo label="E-mail" name="email" def={v.email} type="email" inputMode="email" ph="nome@empresa.com.br" max={120} />
       <Campo label="CNPJ" name="cnpj" def={fmtCnpj(v.cnpj)} inputMode="numeric" ph="00.000.000/0000-00" mask={maskCnpj} max={18} />
       <Campo label="Nº de inscrição" name="inscricao" def={v.inscricao} />
       </div>
@@ -178,7 +185,7 @@ function Campo(p: {
   def: string;
   required?: boolean;
   type?: string;
-  inputMode?: "tel" | "numeric";
+  inputMode?: "tel" | "numeric" | "email";
   ph?: string;
   autoFocus?: boolean;
   mask?: (v: string) => string;
@@ -196,6 +203,8 @@ function Campo(p: {
         placeholder={p.ph}
         autoFocus={p.autoFocus}
         autoComplete="off"
+        autoCapitalize={p.type === "email" ? "none" : undefined}
+        spellCheck={p.type === "email" ? false : undefined}
         maxLength={p.max}
         onInput={p.mask ? (e) => (e.currentTarget.value = p.mask!(e.currentTarget.value)) : undefined}
         className="field"

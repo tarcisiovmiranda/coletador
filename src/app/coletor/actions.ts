@@ -16,6 +16,7 @@ function lerCampos(formData: FormData) {
     empresa: formData.get("empresa") ?? "",
     inscricao: formData.get("inscricao") ?? "",
     whatsapp: formData.get("whatsapp") ?? "",
+    email: formData.get("email") ?? "",
     cnpj: formData.get("cnpj") ?? "",
     observacoes: formData.get("observacoes") ?? "",
   });

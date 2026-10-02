@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     include: { colaborador: { select: { nome: true } } },
   });
 
-  const cab = ["Data", "Coletador", "Nome", "Cargo", "Empresa", "CNPJ", "WhatsApp", "Inscrição", "Etapa", "Áudio", "Observações"];
+  const cab = ["Data", "Coletador", "Nome", "Cargo", "Empresa", "CNPJ", "WhatsApp", "E-mail", "Inscrição", "Etapa", "Áudio", "Observações"];
   const linhas = leads.map((l) =>
     [
       dataBRT(l.createdAt),
@@ -45,6 +45,7 @@ export async function GET(req: Request) {
       l.empresa,
       fmtCnpj(l.cnpj),
       fmtWhats(l.whatsapp),
+      l.email,
       l.inscricao,
       etapaInfo(l.etapaKanban).label,
       l.audioKey ? "Sim" : "Não",

@@ -19,7 +19,7 @@ type Estado =
   | { tipo: "erro"; msg: string; detalhe?: string };
 
 /** Tira a foto do crachá, manda para leitura e devolve os campos para preencher o formulário. */
-export function CrachaScanner({ onLido }: { onLido: (c: CamposCracha) => number }) {
+export function CrachaScanner({ onLido, extra }: { onLido: (c: CamposCracha) => number; extra?: React.ReactNode }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "parado" });
   const entrada = useRef<HTMLInputElement>(null);
 
@@ -97,6 +97,7 @@ export function CrachaScanner({ onLido }: { onLido: (c: CamposCracha) => number 
       {estado.tipo === "parado" && (
         <p className="text-center text-sm text-slate-600">Enquadre o crachá de frente, com boa luz.</p>
       )}
+      {extra}
     </div>
   );
 }

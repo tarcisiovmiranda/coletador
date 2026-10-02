@@ -92,6 +92,7 @@ model Lead {
   empresa       String?
   inscricao     String?
   whatsapp      String?
+  email         String?
   cnpj          String?
   etapaKanban   EtapaKanban @default(NOVO) @map("etapa_kanban")
   audioKey      String?     @map("audio_key")

@@ -48,6 +48,7 @@ export default async function LeadPage({
         <Linha rotulo="CNPJ" valor={fmtCnpj(lead.cnpj)} />
         <Linha rotulo="Inscrição" valor={lead.inscricao} />
         <Linha rotulo="WhatsApp" valor={fmtWhats(lead.whatsapp)} />
+        <Linha rotulo="E-mail" valor={lead.email} />
         <Linha rotulo="Observações" valor={lead.observacoes} />
 
         {lead.audioKey && storageConfigurado() && (
