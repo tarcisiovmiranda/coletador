@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
+import { interpretarCodigo } from "@/lib/codigo-cracha";
 
 // Os formatos mais comuns em crachás e ingressos de feira.
 const FORMATOS = [
@@ -24,7 +25,7 @@ type Estado =
   | { tipo: "parado" }
   | { tipo: "abrindo" }
   | { tipo: "lendo" }
-  | { tipo: "ok"; codigo: string; n: number }
+  | { tipo: "ok"; codigo: string; n: number; soNumero: boolean }
   | { tipo: "erro"; msg: string };
 
 /**
@@ -111,7 +112,9 @@ export function LeitorCodigo({ onLido }: { onLido: (texto: string) => number }) 
           }
           const texto = resultado.getText();
           const n = onLido(texto);
-          setEstado({ tipo: "ok", codigo: texto, n });
+          // código curto = só um identificador (os dados da pessoa ficam no cadastro da feira, não nas barras)
+          const soNumero = Object.keys(interpretarCodigo(texto)).every((k) => k === "inscricao");
+          setEstado({ tipo: "ok", codigo: texto, n, soNumero });
         },
       );
       clearTimeout(limite);
@@ -151,6 +154,11 @@ export function LeitorCodigo({ onLido }: { onLido: (texto: string) => number }) 
         <p role="status" className="break-all text-center text-sm font-semibold text-emerald-800">
           Código lido: {estado.codigo.length > 60 ? estado.codigo.slice(0, 60) + "…" : estado.codigo}
           {estado.n > 0 ? ` · ${estado.n} ${estado.n === 1 ? "campo preenchido" : "campos preenchidos"}` : " · nada novo para preencher"}
+        </p>
+      )}
+      {estado.tipo === "ok" && estado.soNumero && (
+        <p className="text-center text-xs text-slate-600">
+          Este código traz só o nº de inscrição. Para nome, empresa e cargo, use também “Ler crachá com a câmera”.
         </p>
       )}
       {estado.tipo === "erro" && (
