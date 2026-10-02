@@ -12,7 +12,11 @@ export type CamposCracha = {
   inscricao: string;
 };
 
-type Estado = { tipo: "parado" } | { tipo: "lendo" } | { tipo: "ok"; n: number } | { tipo: "erro"; msg: string };
+type Estado =
+  | { tipo: "parado" }
+  | { tipo: "lendo" }
+  | { tipo: "ok"; n: number }
+  | { tipo: "erro"; msg: string; detalhe?: string };
 
 /** Tira a foto do crachá, manda para leitura e devolve os campos para preencher o formulário. */
 export function CrachaScanner({ onLido }: { onLido: (c: CamposCracha) => number }) {
@@ -25,16 +29,28 @@ export function CrachaScanner({ onLido }: { onLido: (c: CamposCracha) => number 
       return;
     }
     setEstado({ tipo: "lendo" });
+    let foto: Blob;
     try {
-      const foto = await reduzirFoto(arquivo);
+      foto = await reduzirFoto(arquivo);
+    } catch {
+      // ex.: formato que este navegador não abre (HEIC) — não é problema de rede
+      setEstado({ tipo: "erro", msg: "Não consegui abrir esta foto. Tire de novo pela câmera ou preencha à mão." });
+      if (entrada.current) entrada.current.value = "";
+      return;
+    }
+    try {
       const r = await fetch("/api/crachas/ler", {
         method: "POST",
         headers: { "Content-Type": "image/jpeg" },
         body: foto,
       });
-      const j = (await r.json().catch(() => null)) as { erro?: string; campos?: CamposCracha } | null;
+      const j = (await r.json().catch(() => null)) as { erro?: string; detalhe?: string; campos?: CamposCracha } | null;
       if (!r.ok || !j?.campos) {
-        setEstado({ tipo: "erro", msg: j?.erro ?? "Não consegui ler o crachá. Preencha à mão." });
+        setEstado({
+          tipo: "erro",
+          msg: j?.erro ?? `Não consegui ler o crachá (erro ${r.status}). Preencha à mão.`,
+          detalhe: j?.detalhe,
+        });
         return;
       }
       const n = onLido(j.campos);
@@ -73,9 +89,10 @@ export function CrachaScanner({ onLido }: { onLido: (c: CamposCracha) => number 
         </p>
       )}
       {estado.tipo === "erro" && (
-        <p role="alert" className="text-center text-sm font-semibold text-red-700">
-          {estado.msg}
-        </p>
+        <div role="alert" className="space-y-1 text-center">
+          <p className="text-sm font-semibold text-red-700">{estado.msg}</p>
+          {estado.detalhe && <p className="break-words text-xs text-slate-500">Detalhe técnico: {estado.detalhe}</p>}
+        </div>
       )}
       {estado.tipo === "parado" && (
         <p className="text-center text-sm text-slate-600">Enquadre o crachá de frente, com boa luz.</p>

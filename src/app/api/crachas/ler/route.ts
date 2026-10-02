@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/session";
 import { cnpjValido } from "@/lib/leads";
@@ -37,6 +36,22 @@ const Cracha = z.object({
   inscricao: z.string().describe("Número de inscrição/credencial impresso; vazio se ausente"),
 });
 
+// Esquema enviado à API escrito à mão (sem depender de conversão automática do Zod).
+const SCHEMA_CRACHA = {
+  type: "object",
+  properties: {
+    legivel: { type: "boolean", description: "true se a imagem é um crachá/credencial com texto legível" },
+    nome: { type: "string", description: "Nome completo do visitante, como impresso; vazio se ausente" },
+    empresa: { type: "string", description: "Empresa/organização; vazio se ausente" },
+    cargo: { type: "string", description: "Cargo/função; vazio se ausente" },
+    telefone: { type: "string", description: "Telefone/WhatsApp impresso, só dígitos; vazio se ausente" },
+    cnpj: { type: "string", description: "CNPJ impresso, só dígitos; vazio se ausente" },
+    inscricao: { type: "string", description: "Número de inscrição/credencial impresso; vazio se ausente" },
+  },
+  required: ["legivel", "nome", "empresa", "cargo", "telefone", "cnpj", "inscricao"],
+  additionalProperties: false,
+} as const;
+
 const SISTEMA = [
   "Você lê fotos de crachás de visitantes de uma feira de negócios (FISP) e extrai os dados impressos.",
   "Regras:",
@@ -54,7 +69,10 @@ const digitos = (s: string) => s.replace(/\D/g, "");
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
-  if (!process.env.ANTHROPIC_API_KEY?.trim()) {
+  // aparar: copiar/colar a chave costuma trazer espaço ou quebra de linha, e o cabeçalho fica inválido
+  // aparar e tirar aspas: ao colar a chave na Vercel, às vezes vão junto
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  if (!apiKey) {
     return NextResponse.json({ erro: "Leitura de crachá não configurada." }, { status: 503 });
   }
   if (acimaDoLimite(user.id)) {
@@ -72,9 +90,9 @@ export async function POST(req: Request) {
   if (bytes.byteLength === 0) return NextResponse.json({ erro: "Imagem vazia." }, { status: 400 });
   if (bytes.byteLength > MAX_BYTES) return NextResponse.json({ erro: "Imagem grande demais." }, { status: 413 });
 
-  const client = new Anthropic({ timeout: 25_000, maxRetries: 1 });
+  const client = new Anthropic({ apiKey, timeout: 25_000, maxRetries: 1 });
   try {
-    const resposta = await client.messages.parse({
+    const resposta = await client.messages.create({
       model: "claude-opus-5-5",
       max_tokens: 2000,
       system: SISTEMA,
@@ -90,10 +108,12 @@ export async function POST(req: Request) {
           ],
         },
       ],
-      output_config: { effort: "low", format: zodOutputFormat(Cracha) },
+      output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA_CRACHA } },
     });
 
-    const lido = resposta.parsed_output;
+    const bloco = resposta.content.find((b): b is Anthropic.TextBlock => b.type === "text");
+    const analisado = Cracha.safeParse(safeJson(bloco?.text ?? ""));
+    const lido = analisado.success ? analisado.data : null;
     if (resposta.stop_reason === "refusal" || !lido || !lido.legivel) {
       return NextResponse.json(
         { erro: "Não consegui ler este crachá. Tente outra foto, bem de frente e com luz, ou preencha à mão." },
@@ -116,11 +136,28 @@ export async function POST(req: Request) {
       },
     });
   } catch (e) {
-    // nunca registra a imagem nem o conteúdo: só o tipo do erro
-    console.error("Leitura de crachá falhou:", e instanceof Error ? e.name : "desconhecido");
+    // nunca registra a imagem nem o conteúdo: só o tipo e o motivo do erro
+    const detalhe = descreverErro(e);
+    console.error("Leitura de crachá falhou:", detalhe);
     return NextResponse.json(
-      { erro: "Serviço de leitura indisponível agora. Preencha à mão." },
+      { erro: "Serviço de leitura indisponível agora. Preencha à mão.", detalhe },
       { status: 502 },
     );
   }
+}
+
+function safeJson(t: string): unknown {
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+}
+
+/** Motivo curto e seguro (sem chave, sem imagem): ex. "401 authentication_error: invalid x-api-key". */
+function descreverErro(e: unknown): string {
+  if (e instanceof Anthropic.APIError) {
+    return `${e.status ?? "rede"} ${limpa(e.message, 160)}`;
+  }
+  return e instanceof Error ? `${e.name}: ${limpa(e.message, 160)}` : "erro desconhecido";
 }
