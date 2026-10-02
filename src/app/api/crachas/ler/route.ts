@@ -94,7 +94,8 @@ export async function POST(req: Request) {
   try {
     const resposta = await client.messages.create({
       model: "claude-opus-5-5",
-      max_tokens: 2000,
+      // o raciocínio do modelo conta neste limite: folga para ele nunca cortar o JSON no meio
+      max_tokens: 16000,
       system: SISTEMA,
       messages: [
         {
@@ -114,9 +115,23 @@ export async function POST(req: Request) {
     const bloco = resposta.content.find((b): b is Anthropic.TextBlock => b.type === "text");
     const analisado = Cracha.safeParse(safeJson(bloco?.text ?? ""));
     const lido = analisado.success ? analisado.data : null;
-    if (resposta.stop_reason === "refusal" || !lido || !lido.legivel) {
+    const tokens = `${resposta.usage.input_tokens}+${resposta.usage.output_tokens} tokens`;
+
+    // Cada motivo de "não leu" tem mensagem própria: assim dá para saber o que ajustar.
+    let motivo: string | null = null;
+    if (resposta.stop_reason === "refusal") motivo = "o modelo recusou a imagem";
+    else if (resposta.stop_reason === "max_tokens") motivo = "a resposta foi cortada (max_tokens)";
+    else if (!lido) motivo = `resposta fora do formato (${resposta.stop_reason})`;
+    else if (!lido.legivel && !lido.nome.trim() && !lido.empresa.trim()) motivo = "o modelo não reconheceu um crachá legível";
+    // legivel=false mas com nome/empresa lidos: aproveita (o coletador confere os campos destacados)
+
+    if (motivo || !lido) {
+      console.error("Crachá não lido:", motivo, tokens); // sem imagem e sem dados pessoais no log
       return NextResponse.json(
-        { erro: "Não consegui ler este crachá. Tente outra foto, bem de frente e com luz, ou preencha à mão." },
+        {
+          erro: "Não consegui ler este crachá. Tente outra foto, bem de frente e com luz, ou preencha à mão.",
+          detalhe: `${motivo} · ${tokens}`,
+        },
         { status: 422 },
       );
     }
