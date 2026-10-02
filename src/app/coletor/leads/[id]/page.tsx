@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { escopoLead, etapaInfo, fmtCnpj, fmtData, fmtWhats, linkWhats } from "@/lib/leads";
+import { escopoLead, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtData, fmtNascimento, fmtWhats, linkWhats } from "@/lib/leads";
 import { storageConfigurado } from "@/lib/storage";
 import { AppShell } from "@/components/app-shell";
 import { ContratoCard } from "@/components/contrato-card";
@@ -47,9 +47,31 @@ export default async function LeadPage({
         <Linha rotulo="Cargo" valor={lead.cargo} />
         <Linha rotulo="CNPJ" valor={fmtCnpj(lead.cnpj)} />
         <Linha rotulo="Inscrição" valor={lead.inscricao} />
-        <Linha rotulo="WhatsApp" valor={fmtWhats(lead.whatsapp)} />
+        <Linha rotulo="Telefone celular" valor={fmtWhats(lead.whatsapp, lead.whatsappDdi)} />
+        <Linha rotulo="Telefone fixo" valor={fmtWhats(lead.telefoneFixo, lead.telefoneFixoDdi)} />
         <Linha rotulo="E-mail" valor={lead.email} />
         <Linha rotulo="Observações" valor={lead.observacoes} />
+
+        {(lead.cpf || lead.nomeCredencial || lead.sexo || lead.dataNascimento || lead.endereco) && (
+          <div className="space-y-3 border-t border-slate-200 pt-3">
+            <p className="text-sm font-bold text-slate-700">Credenciamento</p>
+            <Linha rotulo="Nome na credencial" valor={lead.nomeCredencial} />
+            <Linha rotulo="CPF" valor={fmtCpf(lead.cpf)} />
+            <Linha rotulo="Sexo" valor={lead.sexo} />
+            <Linha rotulo="Data de nascimento" valor={fmtNascimento(lead.dataNascimento)} />
+            <Linha
+              rotulo="Endereço"
+              valor={[
+                [lead.endereco, lead.numero].filter(Boolean).join(", ") + (lead.complemento ? ` - ${lead.complemento}` : ""),
+                lead.bairro,
+                [lead.cidade, lead.uf].filter(Boolean).join(" / "),
+                [fmtCep(lead.cep), lead.pais].filter(Boolean).join(" · "),
+              ]
+                .filter((x) => x && x.trim())
+                .join("\n")}
+            />
+          </div>
+        )}
 
         {lead.audioKey && storageConfigurado() && (
           <div>
@@ -64,7 +86,7 @@ export default async function LeadPage({
 
       <div className="space-y-3">
         {lead.whatsapp && (
-          <a href={linkWhats(lead.whatsapp)} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full">
+          <a href={linkWhats(lead.whatsapp, lead.whatsappDdi)} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full">
             Abrir WhatsApp
           </a>
         )}

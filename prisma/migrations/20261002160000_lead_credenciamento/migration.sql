@@ -1,0 +1,16 @@
+-- Dados de credenciamento do lead (mesmos campos do formulário da feira)
+ALTER TABLE "leads" ADD COLUMN "whatsapp_ddi" TEXT NOT NULL DEFAULT '55',
+ADD COLUMN "telefone_fixo" TEXT,
+ADD COLUMN "telefone_fixo_ddi" TEXT,
+ADD COLUMN "cpf" TEXT,
+ADD COLUMN "nome_credencial" TEXT,
+ADD COLUMN "sexo" TEXT,
+ADD COLUMN "data_nascimento" DATE,
+ADD COLUMN "cep" TEXT,
+ADD COLUMN "endereco" TEXT,
+ADD COLUMN "numero" TEXT,
+ADD COLUMN "complemento" TEXT,
+ADD COLUMN "bairro" TEXT,
+ADD COLUMN "pais" TEXT,
+ADD COLUMN "uf" TEXT,
+ADD COLUMN "cidade" TEXT;

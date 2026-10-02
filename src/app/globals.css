@@ -40,6 +40,10 @@ body {
   .field[data-lido] {
     @apply border-amber-400 bg-amber-50;
   }
+  /* campo obrigatório vazio ou inválido, apontado ao tentar salvar */
+  .field[data-invalido] {
+    @apply border-red-500 bg-red-50;
+  }
   .card {
     @apply rounded-3xl border border-slate-200 bg-white p-4 shadow-sm;
   }

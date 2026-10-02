@@ -5,31 +5,22 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { removerAudio } from "@/lib/storage";
-import { ETAPA_KEYS, escopoLead, leadSchema } from "@/lib/leads";
+import { CAMPOS_LEAD, ETAPA_KEYS, escopoLead, validarLead } from "@/lib/leads";
 
 export type LeadResult = { ok: true; id: string } | { ok: false; erro: string };
 
 function lerCampos(formData: FormData) {
-  return leadSchema.safeParse({
-    nome: formData.get("nome") ?? "",
-    cargo: formData.get("cargo") ?? "",
-    empresa: formData.get("empresa") ?? "",
-    inscricao: formData.get("inscricao") ?? "",
-    whatsapp: formData.get("whatsapp") ?? "",
-    email: formData.get("email") ?? "",
-    cnpj: formData.get("cnpj") ?? "",
-    observacoes: formData.get("observacoes") ?? "",
-  });
+  return validarLead(Object.fromEntries(CAMPOS_LEAD().map((c) => [c, formData.get(c) ?? ""])));
 }
 
 export async function atualizarLead(id: string, formData: FormData): Promise<LeadResult> {
   const user = await requireUser();
-  const parsed = lerCampos(formData);
-  if (!parsed.success) return { ok: false, erro: parsed.error.issues[0].message };
+  const v = lerCampos(formData);
+  if (!v.ok) return { ok: false, erro: v.erros.map((e) => e.mensagem).join(" ") };
 
   const r = await prisma.lead.updateMany({
     where: { id, ...escopoLead(user) },
-    data: parsed.data,
+    data: v.data,
   });
   if (r.count === 0) return { ok: false, erro: "Lead não encontrado." };
   revalidatePath("/coletor");

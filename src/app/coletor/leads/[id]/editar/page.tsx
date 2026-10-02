@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { escopoLead } from "@/lib/leads";
+import { escopoLead, isoNascimento } from "@/lib/leads";
 import { AppShell } from "@/components/app-shell";
 import { LeadForm } from "@/components/lead-form";
+import { valoresDoLead } from "@/lib/lead-valores";
 
 export default async function EditarLead({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -16,16 +17,7 @@ export default async function EditarLead({ params }: { params: Promise<{ id: str
       <div className="card lg:max-w-3xl">
         <LeadForm
           leadId={lead.id}
-          inicial={{
-            nome: lead.nome,
-            cargo: lead.cargo ?? "",
-            empresa: lead.empresa ?? "",
-            inscricao: lead.inscricao ?? "",
-            whatsapp: lead.whatsapp ?? "",
-            email: lead.email ?? "",
-            cnpj: lead.cnpj ?? "",
-            observacoes: lead.observacoes ?? "",
-          }}
+          inicial={valoresDoLead({ ...lead, dataNascimento: isoNascimento(lead.dataNascimento) })}
         />
       </div>
     </AppShell>

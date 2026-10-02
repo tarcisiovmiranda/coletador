@@ -36,6 +36,7 @@ export default async function AdminLeads({
               { cnpj: { contains: q.replace(/\D/g, "") || "§" } },
               { whatsapp: { contains: q.replace(/\D/g, "") || "§" } },
               { email: { contains: q, mode: "insensitive" } },
+              { cpf: { contains: q.replace(/\D/g, "") || "§" } },
             ],
           }
         : {}),
@@ -62,7 +63,7 @@ export default async function AdminLeads({
   return (
     <AppShell user={admin} title="Todos os leads" largo>
       <form className="card mb-4 space-y-3 lg:grid lg:grid-cols-[2fr_1.4fr_1.1fr_auto] lg:items-center lg:gap-3 lg:space-y-0">
-        <input name="q" defaultValue={q} placeholder="Buscar nome, empresa, e-mail, CNPJ, WhatsApp" className="field" />
+        <input name="q" defaultValue={q} placeholder="Buscar nome, empresa, e-mail, CPF, CNPJ, WhatsApp" className="field" />
         <select name="colaborador" defaultValue={colab ?? ""} className="field">
           <option value="">Todos os coletadores</option>
           {equipe.map((c) => (

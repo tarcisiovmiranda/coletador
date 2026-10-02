@@ -1,5 +1,5 @@
 import type { PixTipo } from "@prisma/client";
-import { cnpjValido } from "./leads";
+import { cnpjValido, cpfValido } from "./leads";
 
 export const PIX_TIPOS: { key: PixTipo; label: string; dica: string }[] = [
   { key: "CPF", label: "CPF", dica: "000.000.000-00" },
@@ -8,17 +8,6 @@ export const PIX_TIPOS: { key: PixTipo; label: string; dica: string }[] = [
   { key: "PHONE", label: "Celular", dica: "(11) 99999-9999" },
   { key: "EVP", label: "Chave aleatória", dica: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
 ];
-
-export function cpfValido(v: string) {
-  if (!/^\d{11}$/.test(v) || /^(\d)\1+$/.test(v)) return false;
-  const dv = (base: string) => {
-    let soma = 0;
-    for (let i = 0; i < base.length; i++) soma += Number(base[i]) * (base.length + 1 - i);
-    const r = (soma * 10) % 11;
-    return r === 10 ? 0 : r;
-  };
-  return dv(v.slice(0, 9)) === Number(v[9]) && dv(v.slice(0, 10)) === Number(v[10]);
-}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

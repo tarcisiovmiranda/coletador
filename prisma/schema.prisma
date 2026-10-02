@@ -84,25 +84,41 @@ model Colaborador {
 }
 
 model Lead {
-  id            String      @id @default(cuid())
-  tenantId      String      @map("tenant_id")
-  colaboradorId String      @map("colaborador_id")
-  nome          String
-  cargo         String?
-  empresa       String?
-  inscricao     String?
-  whatsapp      String?
-  email         String?
-  cnpj          String?
-  etapaKanban   EtapaKanban @default(NOVO) @map("etapa_kanban")
-  audioKey      String?     @map("audio_key")
-  audioMime     String?     @map("audio_mime")
+  id              String      @id @default(cuid())
+  tenantId        String      @map("tenant_id")
+  colaboradorId   String      @map("colaborador_id")
+  nome            String
+  cargo           String?
+  empresa         String?
+  inscricao       String?
+  whatsapp        String?
+  whatsappDdi     String      @default("55") @map("whatsapp_ddi")
+  telefoneFixo    String?     @map("telefone_fixo")
+  telefoneFixoDdi String?     @map("telefone_fixo_ddi")
+  email           String?
+  // Dados de credenciamento (formulário da feira)
+  cpf             String?
+  nomeCredencial  String?     @map("nome_credencial")
+  sexo            String?
+  dataNascimento  DateTime?   @map("data_nascimento") @db.Date
+  cep             String?
+  endereco        String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  pais            String?
+  uf              String?
+  cidade          String?
+  cnpj            String?
+  etapaKanban     EtapaKanban @default(NOVO) @map("etapa_kanban")
+  audioKey        String?     @map("audio_key")
+  audioMime       String?     @map("audio_mime")
   // Gerado no aparelho: garante que reenviar o mesmo lead (rede instável) não duplica
-  clientId      String?     @map("client_id")
-  observacoes   String?
+  clientId        String?     @map("client_id")
+  observacoes     String?
   // Preenchido pelo servidor (nunca pelo cliente)
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   tenant      Tenant      @relation(fields: [tenantId], references: [id])
   colaborador Colaborador @relation(fields: [colaboradorId], references: [id])

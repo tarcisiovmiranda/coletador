@@ -21,3 +21,21 @@ export function maskWhats(v: string) {
   if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
+
+/** 000.000.000-00 (até 11 dígitos) */
+export function maskCpf(v: string) {
+  const d = dig(v).slice(0, 11);
+  return d
+    .replace(/^(\d{3})(\d)/, "$1.$2")
+    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1-$2");
+}
+
+/** 00000-000 (até 8 dígitos) */
+export function maskCep(v: string) {
+  const d = dig(v).slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+
+/** Só dígitos, até 3 (DDI) */
+export const maskDdi = (v: string) => dig(v).slice(0, 3);

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
-import { ETAPA_KEYS, etapaInfo, fmtCnpj, fmtWhats } from "@/lib/leads";
+import { ETAPA_KEYS, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtNascimento, fmtWhats } from "@/lib/leads";
 
 // Evita injeção de fórmula ao abrir no Excel/Sheets (=, +, -, @, tab, CR no início).
 function celula(v: string | null | undefined) {
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     include: { colaborador: { select: { nome: true } } },
   });
 
-  const cab = ["Data", "Coletador", "Nome", "Cargo", "Empresa", "CNPJ", "WhatsApp", "E-mail", "Inscrição", "Etapa", "Áudio", "Observações"];
+  const cab = ["Data", "Coletador", "Nome", "Cargo", "Empresa", "CNPJ", "Celular (DDI)", "Celular", "Telefone fixo (DDI)", "Telefone fixo", "E-mail", "CPF", "Nome na credencial", "Sexo", "Nascimento", "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "UF", "País", "Inscrição", "Etapa", "Áudio", "Observações"];
   const linhas = leads.map((l) =>
     [
       dataBRT(l.createdAt),
@@ -44,8 +44,23 @@ export async function GET(req: Request) {
       l.cargo,
       l.empresa,
       fmtCnpj(l.cnpj),
-      fmtWhats(l.whatsapp),
+      l.whatsappDdi,
+      fmtWhats(l.whatsapp, null),
+      l.telefoneFixoDdi,
+      fmtWhats(l.telefoneFixo, null),
       l.email,
+      fmtCpf(l.cpf),
+      l.nomeCredencial,
+      l.sexo,
+      fmtNascimento(l.dataNascimento),
+      fmtCep(l.cep),
+      l.endereco,
+      l.numero,
+      l.complemento,
+      l.bairro,
+      l.cidade,
+      l.uf,
+      l.pais,
       l.inscricao,
       etapaInfo(l.etapaKanban).label,
       l.audioKey ? "Sim" : "Não",

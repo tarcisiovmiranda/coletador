@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
-import { leadSchema } from "@/lib/leads";
+import { validarLead } from "@/lib/leads";
 
 const envelope = z.object({
   clientId: z.string().uuid(),
@@ -34,9 +34,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const campos = leadSchema.safeParse(corpo);
-  if (!campos.success) {
-    return NextResponse.json({ erro: campos.error.issues[0].message }, { status: 400 });
+  const campos = validarLead(corpo);
+  if (!campos.ok) {
+    return NextResponse.json({ erro: campos.erros.map((e) => e.mensagem).join(" "), erros: campos.erros }, { status: 400 });
   }
 
   const existente = () =>
