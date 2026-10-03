@@ -15,8 +15,7 @@ export default async function ModeloContratoPage() {
   });
   return (
     <AppShell user={admin} title="Modelo de contrato">
-      {/* key: ao salvar, o editor recarrega com a versão nova */}
-      <EditorModelo key={atual.versao} titulo={atual.titulo} corpo={atual.corpo} versao={atual.versao} />
+      <EditorModelo titulo={atual.titulo} corpo={atual.corpo} versao={atual.versao} />
       <section className="card mt-4 lg:max-w-xl">
         <h2 className="mb-2 text-lg font-bold text-slate-900">Versões</h2>
         <ul className="space-y-1 text-slate-700">

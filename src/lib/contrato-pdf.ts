@@ -165,8 +165,7 @@ export async function gerarPdfContrato(d: DadosPdf): Promise<Uint8Array> {
   // assinaturas (sempre juntas, em página com espaço suficiente)
   garantir(230);
   y -= 16;
-  page.drawText("Assinaturas", { x: M, y, size: 12.5, font: neg, color: LARANJA });
-  y -= 18;
+  y -= 6;
   const colW = (LARG - 24) / 2;
   const topo = y;
   page.drawText("CONTRATADA", { x: M, y: topo - 2, size: 8, font: neg, color: CINZA });
