@@ -84,7 +84,13 @@ export function variaveisUsadas(corpo: string): string[] {
 
 /** Tira o que quebraria a marcação: negrito, chaves e quebras de linha. */
 export function limparValor(v: string): string {
-  return v.replace(/\*+/g, "").replace(/[{}]/g, "").replace(/\s+/g, " ").trim();
+  return v
+    .replace(/\*+/g, "")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(#+\s*|-\s+|>\s*|\[[ x]\]\s*)+/, "") // marcador de bloco no começo do valor
+    .trim();
 }
 
 export function preencher(

@@ -52,3 +52,11 @@ test("o modelo inicial só usa variáveis conhecidas e tem 10 ferramentas no Ane
   assert.deepEqual(variaveisUsadas(MODELO_INICIAL).filter((v) => !conhecidas.has(v)), []);
   assert.equal(FERRAMENTAS.length, 10);
 });
+
+test("valor não pode começar com marcador de bloco (## - > [x])", () => {
+  assert.equal(limparValor("## Plano"), "Plano");
+  assert.equal(limparValor("- Plano"), "Plano");
+  assert.equal(limparValor("> Plano"), "Plano");
+  assert.equal(limparValor("[x] Plano"), "Plano");
+  assert.equal(limparValor("Plano - Ouro"), "Plano - Ouro");
+});

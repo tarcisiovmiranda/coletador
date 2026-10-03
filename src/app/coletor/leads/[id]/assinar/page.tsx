@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { escopoLead, linkWhats } from "@/lib/leads";
 import { AppShell } from "@/components/app-shell";
 import { modeloVigente } from "@/lib/contrato-modelo";
-import { agora, docLead, limiteDoDia, montarValores } from "@/lib/contrato-campos";
+import { FERRAMENTAS, preencher } from "@/lib/contrato-render";
+import { ROTULO_FALTANTE, agora, docLead, limiteDoDia, montarValores } from "@/lib/contrato-campos";
 import { AssinarForm } from "./assinar-form";
 
 export default async function AssinarPage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,13 +15,25 @@ export default async function AssinarPage({ params }: { params: Promise<{ id: st
   const lead = await prisma.lead.findFirst({ where: { id, ...escopoLead(user) } });
   if (!lead) notFound();
 
-  const faltando = [!lead.email && "e-mail", !docLead(lead) && "CPF ou CNPJ", !lead.endereco && "endereço"].filter(Boolean) as string[];
-  if (faltando.length) {
+  const modelo = await modeloVigente(user.tenantId);
+  const quando = agora();
+  const limiteAuto = limiteDoDia(quando);
+
+  // Confere TODOS os dados do lead que o modelo vigente usa, antes de o cliente ler e assinar
+  // (os campos do contrato — plano, mensalidade etc. — entram com valores de teste).
+  const valores = montarValores(
+    lead,
+    { mensalidadeCents: 70000, plano: "x", vencimento: 10, medicoTrabalho: false, limiteVidas: limiteAuto ?? 1 },
+    user.nome,
+    quando,
+  );
+  const { faltantes } = preencher(modelo.corpo, valores, { todas: FERRAMENTAS, marcadas: FERRAMENTAS });
+  if (faltantes.length) {
     return (
       <AppShell user={user} title="Contrato para assinar">
         <div className="card space-y-3 lg:max-w-xl">
           <p role="alert" className="rounded-xl bg-amber-50 px-4 py-3 font-medium text-amber-800">
-            Faltam dados do lead para o contrato: {faltando.join(", ")}.
+            Faltam dados do lead para o contrato: {faltantes.map((f) => ROTULO_FALTANTE[f] ?? f).join(", ")}.
           </p>
           <Link href={`/coletor/leads/${lead.id}/editar`} className="btn btn-primary w-full">
             Completar cadastro
@@ -30,15 +43,6 @@ export default async function AssinarPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const modelo = await modeloVigente(user.tenantId);
-  const quando = agora();
-  const limiteAuto = limiteDoDia(quando);
-  const valores = montarValores(
-    lead,
-    { mensalidadeCents: 0, plano: "", vencimento: 0, medicoTrabalho: false, limiteVidas: limiteAuto ?? 0 },
-    user.nome,
-    quando,
-  );
   // só os dados do lead seguem para o navegador; o texto final é montado no servidor ao assinar
   const dadosLead = {
     nome: valores.nome, documento: valores.documento, email: valores.email, whatsapp: valores.whatsapp,

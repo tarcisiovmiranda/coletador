@@ -135,6 +135,8 @@ export function AssinarForm(p: Props) {
           signatarioDocumento: doc,
           assinaturaPng: canvas.current!.toDataURL("image/png"),
           aceite: true,
+          versaoModelo: p.modelo.versao,
+          limiteExibido: p.limiteAuto ?? undefined,
         }),
       });
       const j = (await r.json().catch(() => ({}))) as { id?: string; erro?: string };

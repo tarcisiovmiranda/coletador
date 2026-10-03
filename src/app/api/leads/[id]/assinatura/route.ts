@@ -6,13 +6,23 @@ import { parseBRL } from "@/lib/dinheiro";
 import { enviarAudio, storageConfigurado } from "@/lib/storage";
 import { modeloVigente } from "@/lib/contrato-modelo";
 import { FERRAMENTAS, preencher } from "@/lib/contrato-render";
-import { agora, entradaSchema, hashTexto, limiteDoDia, montarValores } from "@/lib/contrato-campos";
+import {
+  ROTULO_FALTANTE,
+  agora,
+  dimensoesPng,
+  entradaSchema,
+  hashTexto,
+  limiteDoDia,
+  montarValores,
+} from "@/lib/contrato-campos";
 import { gerarPdfContrato } from "@/lib/contrato-pdf";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 const MAX_PNG = 200 * 1024;
 const MIN_PNG = 600; // um toque solto gera PNG minúsculo: exige traço de verdade
+const MAX_LARGURA = 1200;
+const MAX_ALTURA = 600;
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 // 20 assinaturas / 10 min por usuário (em memória da instância: freio simples contra abuso)
@@ -25,12 +35,16 @@ function acimaDoLimite(userId: string) {
   return l.length > 20;
 }
 
+/** PNG de verdade, de tamanho de arquivo E de dimensões razoáveis (o PDF decodifica a imagem inteira). */
 function decodificarPng(dataUrl: string): Uint8Array | null {
   const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
   if (!m) return null;
   const bytes = new Uint8Array(Buffer.from(m[1], "base64"));
   if (bytes.byteLength > MAX_PNG || bytes.byteLength < MIN_PNG) return null;
-  return PNG_MAGIC.every((b, i) => bytes[i] === b) ? bytes : null;
+  if (!PNG_MAGIC.every((b, i) => bytes[i] === b)) return null;
+  const d = dimensoesPng(bytes);
+  if (!d || d.w < 50 || d.h < 20 || d.w > MAX_LARGURA || d.h > MAX_ALTURA) return null;
+  return bytes;
 }
 
 const fmtDoc = (d: string) =>
@@ -83,7 +97,21 @@ export async function POST(req: Request, { params }: Ctx) {
   }
   const mensalidadeCents = parseBRL(e.mensalidade)!;
 
+  // o que vai para o PDF tem de ser o que o cliente leu: modelo e limite do dia não podem ter mudado
   const modelo = await modeloVigente(user.tenantId);
+  if (e.versaoModelo !== modelo.versao) {
+    return NextResponse.json(
+      { erro: "O texto do contrato foi atualizado enquanto você lia. Recarregue a página e leia de novo antes de assinar.", recarregar: true },
+      { status: 409 },
+    );
+  }
+  if (limiteDia !== null && e.limiteExibido !== limiteDia) {
+    return NextResponse.json(
+      { erro: "O dia mudou e o limite de vidas do contrato também. Recarregue a página e leia de novo antes de assinar.", recarregar: true },
+      { status: 409 },
+    );
+  }
+
   const valores = montarValores(
     lead,
     { mensalidadeCents, plano: e.plano, vencimento: e.vencimento, medicoTrabalho: e.medicoTrabalho, limiteVidas: limite },
@@ -92,18 +120,10 @@ export async function POST(req: Request, { params }: Ctx) {
   );
   const { texto, faltantes } = preencher(modelo.corpo, valores, { todas: FERRAMENTAS, marcadas: e.ferramentas });
   if (faltantes.length) {
-    const rotulo: Record<string, string> = { email: "e-mail", documento: "CPF ou CNPJ", endereco_completo: "endereço", whatsapp: "WhatsApp" };
-    const nomes = faltantes.map((f) => rotulo[f] ?? f).join(", ");
+    const nomes = faltantes.map((f) => ROTULO_FALTANTE[f] ?? f).join(", ");
     return NextResponse.json({ erro: `Faltam dados do lead para o contrato: ${nomes}. Edite o lead e tente de novo.`, faltantes }, { status: 400 });
   }
   const hash = hashTexto(texto);
-
-  // toque duplo / reenvio: o mesmo texto assinado nos últimos 60 s devolve a assinatura já gravada
-  const recente = await prisma.assinaturaContrato.findFirst({
-    where: { tenantId: user.tenantId, leadId: lead.id, hashSha256: hash, assinadoEm: { gte: new Date(quando.getTime() - 60_000) } },
-    select: { id: true },
-  });
-  if (recente) return NextResponse.json({ id: recente.id }, { status: 200 });
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "desconhecido";
   const userAgent = (req.headers.get("user-agent") ?? "desconhecido").slice(0, 300);
@@ -113,59 +133,82 @@ export async function POST(req: Request, { params }: Ctx) {
   const pdfKey = `${base}-contrato.pdf`;
 
   try {
-    const pdf = await gerarPdfContrato({
-      titulo: modelo.titulo,
-      textoFinal: texto,
-      assinaturaPng: png,
-      signatarioNome: e.signatarioNome,
-      signatarioDocumento: fmtDoc(e.signatarioDocumento),
-      contratadaNome: "CONFORMIDADE PJ SERVIÇOS LTDA",
-      contratadaCnpj: "66.914.632/0001-79",
-      evidencias: {
-        assinadoEm:
-          new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" }).format(quando) + " (Brasília)",
-        ip,
-        userAgent,
-        hash,
-        versao: modelo.versao,
-        id: sufixo,
+    // Uma trava por lead cobre "checar duplicado + gerar + gravar": dois pedidos simultâneos
+    // (toque duplo, dois aparelhos) são atendidos um de cada vez, e o segundo vê o primeiro.
+    const resultado = await prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`assinatura:${lead.id}`}))`;
+
+        // mesmo texto, mesmo signatário, nos últimos 60 s: devolve a assinatura já gravada
+        const recente = await tx.assinaturaContrato.findFirst({
+          where: {
+            tenantId: user.tenantId,
+            leadId: lead.id,
+            hashSha256: hash,
+            signatarioDocumento: e.signatarioDocumento,
+            assinadoEm: { gte: new Date(quando.getTime() - 60_000) },
+          },
+          select: { id: true },
+        });
+        if (recente) return { id: recente.id, nova: false };
+
+        const pdf = await gerarPdfContrato({
+          titulo: modelo.titulo,
+          textoFinal: texto,
+          assinaturaPng: png,
+          signatarioNome: e.signatarioNome,
+          signatarioDocumento: fmtDoc(e.signatarioDocumento),
+          contratadaNome: "CONFORMIDADE PJ SERVIÇOS LTDA",
+          contratadaCnpj: "66.914.632/0001-79",
+          evidencias: {
+            assinadoEm:
+              new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" }).format(quando) + " (Brasília)",
+            ip,
+            userAgent,
+            hash,
+            versao: modelo.versao,
+            id: sufixo,
+          },
+        });
+        await enviarAudio(assinaturaKey, png, "image/png");
+        await enviarAudio(pdfKey, pdf, "application/pdf");
+
+        const criada = await tx.assinaturaContrato.create({
+          data: {
+            tenantId: user.tenantId,
+            leadId: lead.id,
+            modeloId: modelo.id,
+            colaboradorId: user.id,
+            colaboradorNome: user.nome,
+            textoFinal: texto,
+            campos: {
+              mensalidadeCents,
+              plano: e.plano,
+              vencimento: e.vencimento,
+              medicoTrabalho: e.medicoTrabalho,
+              ferramentas: e.ferramentas,
+              limiteVidas: limite,
+              limiteManual: limiteDia === null,
+            },
+            hashSha256: hash,
+            assinaturaKey,
+            pdfKey,
+            signatarioNome: e.signatarioNome,
+            signatarioDocumento: e.signatarioDocumento,
+            ip,
+            userAgent,
+            assinadoEm: quando,
+          },
+          select: { id: true },
+        });
+        return { id: criada.id, nova: true };
       },
-    });
-    await enviarAudio(assinaturaKey, png, "image/png");
-    await enviarAudio(pdfKey, pdf, "application/pdf");
+      { timeout: 30_000, maxWait: 10_000 },
+    );
+    return NextResponse.json({ id: resultado.id }, { status: resultado.nova ? 201 : 200 });
   } catch (err) {
     console.error("Assinatura: falha ao gerar/guardar", err);
     const tipo = err instanceof Error ? err.name : "desconhecido";
     return NextResponse.json({ erro: `Não foi possível gerar o contrato (${tipo}). Tente de novo.` }, { status: 502 });
   }
-
-  const criada = await prisma.assinaturaContrato.create({
-    data: {
-      tenantId: user.tenantId,
-      leadId: lead.id,
-      modeloId: modelo.id,
-      colaboradorId: user.id,
-      colaboradorNome: user.nome,
-      textoFinal: texto,
-      campos: {
-        mensalidadeCents,
-        plano: e.plano,
-        vencimento: e.vencimento,
-        medicoTrabalho: e.medicoTrabalho,
-        ferramentas: e.ferramentas,
-        limiteVidas: limite,
-        limiteManual: limiteDia === null,
-      },
-      hashSha256: hash,
-      assinaturaKey,
-      pdfKey,
-      signatarioNome: e.signatarioNome,
-      signatarioDocumento: e.signatarioDocumento,
-      ip,
-      userAgent,
-      assinadoEm: quando,
-    },
-    select: { id: true },
-  });
-  return NextResponse.json({ id: criada.id }, { status: 201 });
 }

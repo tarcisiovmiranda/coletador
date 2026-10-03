@@ -50,3 +50,45 @@ test("montarValores formata dados do lead e campos da assinatura", () => {
   assert.equal(v.coletor, "Beto");
   assert.match(v.endereco_completo, /Rua A, 10 - Centro - São Paulo\/SP - CEP 01038-100/);
 });
+
+import { dimensoesPng, entradaSchema, ROTULO_FALTANTE } from "./contrato-campos";
+
+const PNG_1X1 = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+
+test("dimensoesPng lê largura e altura do cabeçalho", () => {
+  assert.deepEqual(dimensoesPng(PNG_1X1), { w: 1, h: 1 });
+  assert.equal(dimensoesPng(new Uint8Array(10)), null);
+});
+
+test("dimensoesPng enxerga um PNG que declara 20000x20000", () => {
+  const b = Uint8Array.from(PNG_1X1);
+  new DataView(b.buffer).setUint32(16, 20000);
+  new DataView(b.buffer).setUint32(20, 20000);
+  assert.deepEqual(dimensoesPng(b), { w: 20000, h: 20000 });
+});
+
+const base = {
+  mensalidade: "700,00", plano: "Completo", vencimento: 10, medicoTrabalho: false, ferramentas: ["PGR"],
+  signatarioNome: "Ana Souza", signatarioDocumento: "529.982.247-25", assinaturaPng: "x", aceite: true,
+  versaoModelo: 1, limiteExibido: 1300,
+};
+
+test("mensalidade não aceita sinal nem texto", () => {
+  for (const ruim of ["-700", "abc", "7a0", "700,00,1", "--1", "+700", ""]) {
+    assert.equal(entradaSchema.safeParse({ ...base, mensalidade: ruim }).success, false, ruim);
+  }
+  for (const bom of ["700,00", "700", "1.234,56", "1234.56", "99,9"]) {
+    assert.equal(entradaSchema.safeParse({ ...base, mensalidade: bom }).success, true, bom);
+  }
+});
+
+test("entrada exige a versão do modelo que o cliente leu", () => {
+  const semVersao: Record<string, unknown> = { ...base }; delete semVersao.versaoModelo;
+  assert.equal(entradaSchema.safeParse(semVersao).success, false);
+  assert.equal(entradaSchema.safeParse(base).success, true);
+});
+
+test("rótulos dos dados faltantes do lead", () => {
+  assert.equal(ROTULO_FALTANTE.email, "e-mail");
+  assert.equal(ROTULO_FALTANTE.whatsapp, "WhatsApp");
+});

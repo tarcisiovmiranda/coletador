@@ -31,15 +31,37 @@ export function limiteDoDia(d: Date): number | null {
   return LIMITE_POR_DIA[diaBrasilia(d)] ?? null;
 }
 
-export const hashTexto = (texto: string) => createHash("sha256").update(texto, "utf8").digest("hex");
+/** Largura/altura declaradas no cabeçalho do PNG (IHDR), sem decodificar a imagem. */
+export function dimensoesPng(b: Uint8Array): { w: number; h: number } | null {
+  if (b.byteLength < 24) return null;
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  return { w: v.getUint32(16), h: v.getUint32(20) };
+}
+
+/** Nome amigável do dado do lead que falta no contrato. */
+export const ROTULO_FALTANTE: Record<string, string> = {
+  email: "e-mail",
+  documento: "CPF ou CNPJ",
+  endereco_completo: "endereço",
+  whatsapp: "WhatsApp",
+  empresa: "empresa",
+  cargo: "cargo",
+};
+
+export const hashTexto =(texto: string) => createHash("sha256").update(texto, "utf8").digest("hex");
 
 const soDigitos = (v: string) => v.replace(/\D/g, "");
 
 export const entradaSchema = z.object({
+  // só dígitos com separadores (700 | 700,00 | 1.234,56 | 1234.56): "-700" ou "7a0" não passam
   mensalidade: z.string().refine((v) => {
+    if (!/^(\d{1,3}(\.\d{3})+|\d+)([.,]\d{1,2})?$/.test(v.trim())) return false;
     const c = parseBRL(v);
     return c !== null && c >= 100 && c <= 10_000_000;
   }, "Informe uma mensalidade válida."),
+  // o que o cliente LEU: o servidor recusa se o modelo ou o limite do dia mudaram desde então
+  versaoModelo: z.number().int().min(1),
+  limiteExibido: z.number().int().optional(),
   plano: z.string().trim().min(2, "Informe o plano.").max(120, "Plano muito longo."),
   vencimento: z.number().int("Dia de vencimento inválido.").min(1, "Dia de vencimento: 1 a 28.").max(28, "Dia de vencimento: 1 a 28."),
   medicoTrabalho: z.boolean(),
