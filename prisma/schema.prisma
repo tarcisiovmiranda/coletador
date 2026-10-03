@@ -54,6 +54,8 @@ model Tenant {
   leads              Lead[]
   contratos          Contrato[]
   pagamentos         PagamentoComissao[]
+  modelosContrato    ModeloContrato[]
+  assinaturas        AssinaturaContrato[]
 
   @@map("tenants")
 }
@@ -77,6 +79,7 @@ model Colaborador {
   leads      Lead[]
   contratos  Contrato[]
   pagamentos PagamentoComissao[]
+  assinaturas AssinaturaContrato[]
 
   @@unique([tenantId, codigoHash])
   @@index([tenantId, perfil])
@@ -123,6 +126,7 @@ model Lead {
   tenant      Tenant      @relation(fields: [tenantId], references: [id])
   colaborador Colaborador @relation(fields: [colaboradorId], references: [id])
   contrato    Contrato?
+  assinaturas AssinaturaContrato[]
 
   @@unique([tenantId, clientId])
   @@index([tenantId, colaboradorId])
@@ -188,4 +192,47 @@ model PagamentoComissao {
   @@index([tenantId, colaboradorId])
   @@index([tenantId, status])
   @@map("pagamentos_comissao")
+}
+
+model ModeloContrato {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  versao        Int
+  titulo        String
+  corpo         String
+  criadoPorNome String?  @map("criado_por_nome")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id])
+  assinaturas AssinaturaContrato[]
+
+  @@unique([tenantId, versao])
+  @@map("modelos_contrato")
+}
+
+model AssinaturaContrato {
+  id                  String   @id @default(cuid())
+  tenantId            String   @map("tenant_id")
+  leadId              String   @map("lead_id")
+  modeloId            String   @map("modelo_id")
+  colaboradorId       String   @map("colaborador_id")
+  colaboradorNome     String   @map("colaborador_nome")
+  textoFinal          String   @map("texto_final")
+  campos              Json
+  hashSha256          String   @map("hash_sha256")
+  assinaturaKey       String   @map("assinatura_key")
+  pdfKey              String   @map("pdf_key")
+  signatarioNome      String   @map("signatario_nome")
+  signatarioDocumento String   @map("signatario_documento")
+  ip                  String
+  userAgent           String   @map("user_agent")
+  assinadoEm          DateTime @default(now()) @map("assinado_em")
+
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  lead        Lead           @relation(fields: [leadId], references: [id])
+  modelo      ModeloContrato @relation(fields: [modeloId], references: [id])
+  colaborador Colaborador    @relation(fields: [colaboradorId], references: [id])
+
+  @@index([tenantId, leadId])
+  @@map("assinaturas_contrato")
 }

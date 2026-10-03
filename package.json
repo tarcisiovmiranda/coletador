@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --conditions=react-server --import tsx --test src/lib/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -23,6 +24,7 @@
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.12",
     "next": "16.3.8",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",

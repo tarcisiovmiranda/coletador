@@ -1,0 +1,210 @@
+**CONTRATO DE ADESÃO • LEI 8.078/1990 • ESTANDE C93B**
+
+Assinatura mensal, sem fidelidade · assina na tela, com certificado digital ou no papel
+
+## Qualificação das partes
+
+> **CONTRATADA:** CONFORMIDADE PJ SERVIÇOS LTDA, CNPJ 66.914.632/0001-79, com sede na Rua Dom José de Barros, nº 51, Sala 10, República, CEP 01.038-100, São Paulo/SP. Atendimento: WhatsApp **(12) 98821-9169** · e-mail **contato@conformidadepj.com.br**.
+>
+> **CONTRATANTE:** **{{nome}}**, inscrita no CPF/CNPJ sob o nº **{{documento}}**, com endereço em **{{endereco_completo}}**, e-mail **{{email}}**, telefone **{{whatsapp}}**, neste ato representada por **{{nome}}**.
+>
+> Este contrato serve tanto à empresa que usa a plataforma nas próprias obrigações quanto ao profissional de segurança e saúde do trabalho que a usa para atender clientes. Onde a lei der tratamento diferente ao consumidor pessoa natural, o texto diz qual regra vale.
+
+## 1. Objeto
+
+1.1. A CONTRATADA licencia à CONTRATANTE, de forma não exclusiva, intransferível e pelo prazo deste contrato, o uso das ferramentas da plataforma ConformidadePJ relacionadas no Anexo I, **que já vem assinalado com as ferramentas deste plano** — neste contrato: **Diagnóstico NR-1, Cadastro (quadro de pessoal), Levantamento de Riscos, PGR, PCMSO, LTCAT, Ergonomia, CIPA, Canal de Denúncias, Comunicados** —, acessíveis pela internet, no modelo de software como serviço.
+
+1.1.1. **O preço da cláusula 2 é por contrato, e não por ferramenta.** As ferramentas do Anexo I recebem as atualizações sem custo adicional, na forma da cláusula 2.3. **Outra ferramenta da plataforma — inclusive a que for criada durante a vigência — só passa a integrar este contrato por aditivo**, com o preço informado por escrito antes da contratação.
+
+1.2. A licença é de uso do software. Não há cessão de código-fonte, franquia, sublicenciamento nem transferência de propriedade intelectual.
+
+1.3. As ferramentas organizam dados, geram documentos, alertam prazos e reúnem evidências. **Elas não substituem laudo, perícia, exame ocupacional, programa legal nem a atuação de profissional legalmente habilitado —** engenheiro de segurança, médico do trabalho ou outro exigido pela norma aplicável.
+
+> ### SERVIÇO OPCIONAL DE MÉDICO DO TRABALHO — LEIA COM ATENÇÃO
+>
+> 1.4. Quando constar do plano da cláusula 2.1, o **serviço opcional de médico do trabalho** é prestado por médico do trabalho parceiro da CONTRATADA, com registro de especialista e inscrito no Conselho Regional de Medicina do Estado em que fica a empresa atendida, e compreende: (a) a responsabilidade pelo **PCMSO —** elaboração, coordenação e relatório analítico anual, na forma da NR-7; e (b) a expedição do **LTCAT**, na forma do § 1º do art. 58 da Lei nº 8.213/1991.
+>
+> 1.4.1. **Não estão incluídos**: exame clínico ocupacional, Atestado de Saúde Ocupacional (ASO), exames complementares, Comunicação de Acidente de Trabalho (CAT), perícia e consulta ou tratamento médico do trabalhador. Também não estão incluídas as **medições e avaliações ambientais feitas no local de trabalho**, de que o LTCAT depende: elas são fornecidas pela CONTRATANTE, realizadas por profissional habilitado.
+>
+> 1.4.2. O adicional de R$ 200,00 por mês da cláusula 2.1.1 corresponde a **uma empresa atendida (um CNPJ)**. Cada empresa a mais atendida pelo serviço acrescenta o mesmo valor mensal.
+>
+> 1.4.3. Cabe à empresa atendida, como empregadora, **indicar formalmente o médico** como responsável pelo PCMSO (NR-7, item 7.4.1, alínea "c") e fornecer o PGR, o inventário de riscos, o quadro de pessoal e as funções. O serviço começa depois dessa indicação e da entrega desses documentos.
+>
+> 1.4.4. O serviço está disponível de imediato para empresas situadas em **São Paulo, Paraná e Santa Catarina**. Nos demais Estados, ele começa quando a CONTRATADA confirmar por escrito o médico habilitado naquele Estado; **até essa confirmação o adicional não é cobrado**, e o valor que já tiver sido pago por ele é devolvido ou abatido da mensalidade seguinte, à escolha da CONTRATANTE.
+
+1.5. **Degustação de telemedicina.** Este contrato dá à CONTRATANTE, **sem custo**, o acesso de **1 (uma) pessoa**, indicada por seu dirigente, à telemedicina assistencial, por **30 (trinta) dias** contados da ativação do acesso. O atendimento é prestado por rede médica parceira, com responsável técnico médico, identificada à pessoa indicada no momento da ativação; a CONTRATADA não presta o atendimento médico.
+
+1.5.1. A telemedicina é assistencial: cuida da saúde da pessoa atendida e **não substitui exame médico ocupacional nem ASO**, que dependem de exame clínico presencial (Resolução CFM nº 2.323/2022, art. 6º, I).
+
+1.5.2. Terminados os 30 dias, a degustação se encerra **sem cobrança automática**. A continuidade, a inclusão de outras pessoas e os demais serviços não descritos neste contrato são negociados à parte, em instrumento próprio.
+
+## 2. Preço, pagamento e reajuste
+
+2.1. A CONTRATANTE pagará mensalidade de **R$ {{mensalidade}}**, referente ao plano **{{plano}}** e às ferramentas assinaladas no Anexo I. Serviço opcional de médico do trabalho: **{{medico_trabalho}}**.
+
+2.1.1. Contratada durante a FISP 2026, a mensalidade é de **R$ 700,00 (setecentos reais)**. O serviço opcional de **médico do trabalho** acrescenta **R$ 200,00 (duzentos reais) por mês** e só é cobrado se constar do plano acima.
+
+> ### LIMITE DE USO E EXCEDENTE — LEIA COM ATENÇÃO
+>
+> 2.1.2. A mensalidade da cláusula 2.1.1 contempla o cadastro de até **1.300 (mil e trezentas) vidas** se este contrato for assinado no 1º dia da FISP 2026 (06/10/2026), **1.200 (mil e duzentas) vidas** no 2º dia (07/10/2026) e **1.100 (mil e cem) vidas** no 3º dia (08/10/2026). Vale o limite do dia da assinatura deste contrato, e ele **não diminui** enquanto o contrato durar. Limite aplicado a este contrato: **{{limite_vidas}} vidas**.
+>
+> 2.1.3. Entende-se por **vida** cada trabalhador ativo cadastrado na plataforma pela CONTRATANTE, contado uma única vez ainda que vinculado a mais de uma empresa cliente.
+>
+> 2.1.4. Cada vida que exceder o limite é cobrada a **R$ 1,00 (um real) por mês**, acrescida à mensalidade. A apuração considera o maior número de vidas ativas no mês, **é informada à CONTRATANTE antes da cobrança**, e mês em que o limite não for ultrapassado não gera acréscimo algum.
+>
+> 2.1.4.1. A CONTRATANTE **cadastra na plataforma todas as vidas** abrangidas pelos documentos e serviços deste contrato, de forma fiel e atualizada. Constatado que o número real de vidas era maior que o cadastrado, a diferença que exceder o limite é cobrada pelo valor da cláusula 2.1.4, **desde o mês em que a vida deveria ter sido cadastrada**, ainda que isso só se saiba depois.
+
+2.1.5. Os valores e limites das cláusulas 2.1.1, 2.1.2 e 2.3 valem para contratos assinados **nos dias da FISP 2026 — 6, 7 e 8 de outubro de 2026**. Fora desses dias, a mensalidade, a implantação e o limite de vidas são os informados por escrito pela CONTRATADA antes da assinatura e indicados no plano da cláusula 2.1.
+
+2.2. O vencimento é todo dia **{{vencimento}}** de cada mês. **A cobrança é emitida e recebida pela plataforma ASAAS**, por Pix, boleto ou cartão de crédito, à escolha da CONTRATANTE, que receberá o link ou o documento de cobrança por e-mail e WhatsApp antes de cada vencimento.
+
+2.2.1. A ASAAS atua como instituição de pagamento contratada pela CONTRATADA para receber os valores. A troca do meio de pagamento pode ser feita a qualquer tempo, sem custo, e a CONTRATANTE nunca é obrigada a manter cartão cadastrado.
+
+2.3. Na contratação, a CONTRATANTE paga **taxa única de implantação de R$ 200,00 (duzentos reais)**, que não se repete nos meses seguintes. O preço mensal inclui as atualizações das ferramentas contratadas e o suporte da cláusula 6. Não há taxa de cancelamento.
+
+2.3.1. A implantação compreende a configuração inicial do acesso e o **treinamento inicial** dos usuários indicados pela CONTRATANTE, por videoconferência, individual, com material de apoio, **nos 30 (trinta) dias seguintes à liberação do acesso**. Depois desse período, o treinamento de novos usuários cabe à CONTRATANTE, que pode usar o mesmo material.
+
+2.4. O reajuste ocorre a cada 12 meses de vigência, pela variação do **IPCA/IBGE** acumulada no período, comunicado com 30 dias de antecedência. **Nenhum aumento fora dessa regra pode ser aplicado unilateralmente.**
+
+2.5. Os encargos do atraso e as medidas de cobrança estão na cláusula 13. Os mesmos encargos são devidos pela CONTRATADA à CONTRATANTE em caso de valor a restituir.
+
+## 3. 7 dias para cancelar
+
+3.1. A CONTRATANTE pode **cancelar este contrato em até 7 (sete) dias corridos**, contados da assinatura ou da liberação do acesso, o que ocorrer por último, sem precisar justificar e sem custo.
+
+3.2. Cancelado nesse prazo, **tudo o que foi pago — mensalidade e implantação — é devolvido**, na forma da cláusula 4.
+
+3.3. Com o cancelamento, o acesso é encerrado, e os dados inseridos ficam disponíveis para exportação por 30 dias.
+
+## 4. Direito de arrependimento
+
+> ### DIREITO DO CONSUMIDOR — LEIA COM ATENÇÃO
+>
+> 4.1. Como a contratação ocorre fora do estabelecimento comercial — no estande da feira, por telefone ou pela internet —, a CONTRATANTE pessoa natural pode **desistir do contrato em até 7 (sete) dias corridos**, contados da assinatura ou do início do acesso, o que ocorrer por último, sem precisar justificar (art. 49 do Código de Defesa do Consumidor).
+>
+> 4.2. Exercido o arrependimento, **todo valor pago é devolvido de imediato e monetariamente atualizado**, sem desconto de qualquer espécie.
+>
+> 4.3. Basta comunicar pelo WhatsApp **(12) 98821-9169**, pelo e-mail **contato@conformidadepj.com.br** ou dentro da plataforma. A CONTRATADA confirmará o recebimento por escrito no mesmo dia útil.
+>
+> 4.4. Por liberalidade, **a CONTRATADA estende o mesmo direito à contratante pessoa jurídica**, nas mesmas condições.
+
+## 5. Prazo e cancelamento
+
+5.1. O contrato vigora por prazo indeterminado, com ciclos mensais. **Não há fidelidade, prazo mínimo nem multa de cancelamento.**
+
+5.2. A CONTRATANTE pode cancelar a qualquer tempo, **pelos mesmos canais em que contratou**, sem passar por setor de retenção. O pedido é confirmado por escrito em até 1 dia útil.
+
+5.3. O cancelamento encerra a cobrança a partir do ciclo seguinte; o ciclo já pago segue disponível até o fim.
+
+5.4. A CONTRATADA só pode rescindir por falta de pagamento superior a 30 dias, uso fraudulento ou descumprimento grave, sempre com aviso prévio de 15 dias e chance de regularizar — salvo fraude comprovada, caso em que o bloqueio é imediato e comunicado no mesmo dia.
+
+5.5. Encerrado o contrato, a CONTRATANTE tem **60 dias** para exportar seus dados e documentos em formato legível por máquina, sem custo.
+
+## 6. Disponibilidade e suporte
+
+6.1. A CONTRATADA mantém a plataforma disponível de forma contínua, ressalvadas manutenções programadas, avisadas com 48 horas de antecedência, e interrupções de força maior.
+
+6.2. O suporte é prestado por **WhatsApp e e-mail**, de **segunda a sexta-feira**, das **9h** às **17h**, exceto feriados, com primeira resposta em até **8 (oito) horas úteis**.
+
+6.3. O suporte é operacional: orienta o uso das ferramentas. **Não é consultoria jurídica, trabalhista ou de engenharia, nem elaboração de laudo**, que dependem de profissional habilitado contratado à parte.
+
+6.4. Se a indisponibilidade por causa imputável à CONTRATADA passar de **24 (vinte e quatro) horas** no mês, a mensalidade é abatida proporcionalmente aos dias parados, mediante simples pedido.
+
+## 7. Obrigações da contratante
+
+- Fornecer dados cadastrais verdadeiros e mantê-los atualizados.
+- Guardar as credenciais de acesso e responder pelo uso feito por seus usuários.
+- Conferir o conteúdo dos documentos gerados e submetê-los ao profissional habilitado quando a norma exigir assinatura técnica.
+- Cumprir as obrigações de segurança e saúde do trabalho que a lei atribui ao empregador, que não se transferem à CONTRATADA pelo uso da plataforma.
+- Não copiar, revender, sublicenciar nem tentar extrair o código das ferramentas.
+- Não alterar documento assinado pelo médico do trabalho ou por outro responsável técnico, nem usar o nome, o registro profissional ou a assinatura dele em documento que ele não tenha assinado — inclusive por cópia ou reaproveitamento de documento anterior.
+
+## 8. Dados pessoais (LGPD)
+
+8.1. Para os dados de trabalhadores, prestadores e demais titulares inseridos na plataforma, **a CONTRATANTE é a controladora** e **a CONTRATADA é a operadora**, que trata os dados em nome dela e segundo suas instruções (art. 5º, VI e VII, e art. 39 da Lei 13.709/2018).
+
+8.2. A CONTRATADA usa os dados apenas para executar este contrato, mantém registro das operações de tratamento e não os compartilha fora do necessário à prestação, salvo obrigação legal.
+
+8.3. Pedidos de titulares (confirmação, acesso, correção, eliminação, portabilidade — art. 18 da mesma lei) são encaminhados pela CONTRATANTE, e a CONTRATADA a apoia em até **5 (cinco) dias úteis**.
+
+8.4. Incidente de segurança relevante é comunicado à CONTRATANTE em até **48 (quarenta e oito) horas** do conhecimento.
+
+8.5. Encerrado o contrato e vencido o prazo da cláusula 5.5, os dados pessoais são eliminados, salvo os que a lei mandar guardar.
+
+8.6. Encarregado pelo tratamento de dados: **Tarcisio Miranda**, pelo e-mail **contato@conformidadepj.com.br**.
+
+## 9. Propriedade intelectual
+
+9.1. A plataforma, seu código, marcas, modelos de documento e materiais são de titularidade da CONTRATADA, protegidos pela Lei 9.609/1998 e pela Lei 9.610/1998.
+
+9.2. Os dados inseridos e os documentos gerados a partir deles pertencem à CONTRATANTE, que pode exportá-los a qualquer tempo.
+
+## 10. Responsabilidade
+
+> ### CLÁUSULA QUE LIMITA DIREITO — LEIA COM ATENÇÃO
+>
+> 10.1. A CONTRATADA responde pelos vícios e defeitos da plataforma na forma da lei. **Nenhuma cláusula deste contrato afasta a responsabilidade da CONTRATADA perante a contratante consumidora pessoa natural** (art. 51, I, do Código de Defesa do Consumidor).
+>
+> 10.2. **Quando a CONTRATANTE for pessoa jurídica**, a indenização fica limitada ao total pago nos 12 meses anteriores ao fato, excluídos lucros cessantes e danos indiretos — limitação admitida entre empresas e expressamente destacada aqui.
+>
+> 10.3. A CONTRATADA não responde por autuação ou multa decorrente de informação incorreta prestada pela CONTRATANTE, de descumprimento de obrigação que é dela, ou de documento usado sem a assinatura do profissional habilitado exigido pela norma.
+>
+> 10.4. Os documentos técnicos são elaborados com base nas informações fornecidas pela CONTRATANTE. Se informação **falsa, incompleta ou incorreta** fornecida por ela causar condenação, multa ou indenização à CONTRATADA ou ao profissional que assinou o documento, **a CONTRATANTE ressarce o que eles comprovadamente tiverem pago**.
+
+## 11. Alterações deste contrato
+
+11.1. Mudanças de preço, de funcionalidades contratadas ou de condições só valem após **comunicação prévia de 30 dias**, por e-mail e dentro da plataforma.
+
+11.2. Se não concordar, a CONTRATANTE pode **encerrar o contrato sem qualquer ônus** até a data em que a mudança entraria em vigor, com devolução proporcional do que tiver pago adiantado.
+
+11.3. Melhorias que não reduzam funcionalidade nem aumentem preço podem ser feitas a qualquer tempo.
+
+## 12. Assinatura e validade
+
+12.1. As partes admitem como válidas, para este contrato, três formas de assinatura, todas com a mesma força entre elas:
+
+- **Eletrônica simples —** assinatura na tela ou por link enviado ao contratante, com identificação do signatário, hora do servidor, IP, aparelho e o resumo criptográfico (SHA-256) do texto assinado (art. 4º, I, da Lei 14.063/2020).
+- **Eletrônica qualificada —** assinatura com certificado digital ICP-Brasil (art. 4º, III, da mesma lei, que remete ao § 1º do art. 10 da Medida Provisória 2.200-2/2001).
+- **Manuscrita —** impressão em duas vias e assinatura de próprio punho.
+
+12.2. A CONTRATADA entrega ao signatário, no ato, o comprovante da assinatura, e guarda cópia.
+
+## 13. Inadimplência
+
+> ### ATRASO, SUSPENSÃO E COBRANÇA — LEIA COM ATENÇÃO
+>
+> 13.1. O não pagamento de qualquer valor na data de vencimento caracteriza **inadimplência de pleno direito**, independentemente de notificação ou interpelação, sujeitando a CONTRATANTE, sobre o valor em atraso, a: (i) **multa moratória de 2% (dois por cento)**; (ii) **juros de mora de 1% (um por cento) ao mês**, calculados pro rata die; e (iii) **correção monetária pelo IPCA/IBGE**, desde a data do vencimento até o efetivo pagamento.
+>
+> 13.2. Ocorrida a inadimplência, a CONTRATADA poderá realizar cobranças administrativas por telefone, WhatsApp, e-mail ou outros canais de contato informados pela CONTRATANTE, inclusive para envio de avisos, notificações e propostas de regularização.
+>
+> 13.3. Persistindo o débito por mais de **10 (dez) dias**, a CONTRATADA poderá, mediante **comunicação prévia à CONTRATANTE com 5 (cinco) dias de antecedência**, suspender o acesso à plataforma e aos serviços deste contrato até a regularização. Durante a suspensão os dados ficam preservados, e o acesso é restabelecido em até 1 (um) dia útil depois de confirmado o pagamento. Mantida a inadimplência, a CONTRATADA poderá rescindir o contrato na forma da cláusula 5.4, sem prejuízo da cobrança dos valores vencidos e dos encargos desta cláusula.
+>
+> 13.4. As parcelas vencidas permanecem integralmente exigíveis. Nas hipóteses de parcelamento ou de obrigação com saldo previamente determinado, o inadimplemento poderá acarretar o vencimento antecipado das parcelas vincendas, desde que compatível com a natureza da contratação e expressamente previsto neste contrato.
+>
+> 13.5. Este contrato não tem prazo determinado nem período mínimo de permanência (cláusula 5.1). O cancelamento, por qualquer das partes, não dispensa o pagamento dos valores já vencidos e de seus encargos.
+>
+> 13.6. Não regularizado o débito, a CONTRATADA poderá adotar as medidas extrajudiciais e judiciais cabíveis para a recuperação do crédito, inclusive o **protesto do título ou a inscrição em cadastros de proteção ao crédito**, quando juridicamente aplicável.
+>
+> 13.7. O tratamento dos dados de contato da CONTRATANTE para faturamento, comunicação, cobrança e exercício regular de direitos observará a Lei nº 13.709/2018 (LGPD), limitando-se à finalidade contratual.
+>
+> 13.8. A tolerância quanto a eventual atraso, bem como a negociação ou o parcelamento de débitos, não constituirá renúncia, novação ou alteração das obrigações contratadas, que permanecerão em pleno vigor.
+
+## 14. Disposições finais e foro
+
+14.1. Este é um contrato de adesão. As cláusulas que limitam direitos estão destacadas em quadro próprio, e o texto segue redação clara e corpo mínimo 12, na forma do art. 54, §§ 3º e 4º, do Código de Defesa do Consumidor.
+
+14.2. A tolerância de uma parte não significa renúncia nem altera o contrato.
+
+14.3. **Sendo a CONTRATANTE consumidora pessoa natural, fica eleito o foro do domicílio dela** (art. 101, I, do Código de Defesa do Consumidor). Nos demais casos, o foro é o da Comarca de São Paulo/SP.
+
+14.4. Este contrato prevalece sobre o Termo de Uso da plataforma naquilo em que for mais favorável à CONTRATANTE.
+
+## Anexo I — Ferramentas contratadas
+
+As ferramentas deste plano já vêm marcadas, e o preço é por contrato, não por ferramenta. Desmarque apenas se o cliente pedir.
+
+{{ferramentas}}
+
+## Assinaturas
+
+Local e data: {{local}}, {{data}}, estande C93B, FISP 2026.
