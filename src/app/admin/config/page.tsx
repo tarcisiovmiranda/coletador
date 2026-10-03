@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
@@ -15,6 +16,10 @@ export default async function ConfigPage() {
   return (
     <AppShell user={admin} title="Configurações">
       <ComissaoForm atual={atual} />
+      <Link href="/admin/config/contrato" className="card mt-4 block lg:max-w-xl">
+        <h2 className="text-lg font-bold text-slate-900">Modelo de contrato</h2>
+        <p className="text-sm text-slate-600">Editar o texto que o cliente assina no estande.</p>
+      </Link>
     </AppShell>
   );
 }
