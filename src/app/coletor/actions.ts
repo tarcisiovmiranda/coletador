@@ -53,11 +53,14 @@ export async function excluirLead(id: string): Promise<ExcluirResult> {
   const admin = await requireAdmin();
   const lead = await prisma.lead.findFirst({
     where: { id, tenantId: admin.tenantId },
-    select: { id: true, audioKey: true, contrato: { select: { id: true, status: true } } },
+    select: { id: true, audioKey: true, contrato: { select: { id: true, status: true } }, _count: { select: { assinaturas: true } } },
   });
   if (!lead) return { ok: false, erro: "Lead não encontrado." };
   if (lead.contrato && lead.contrato.status !== "CANCELADO") {
     return { ok: false, erro: "Este lead tem contrato ativo. Cancele o contrato antes de excluir." };
+  }
+  if (lead._count.assinaturas > 0) {
+    return { ok: false, erro: "Este lead tem contrato assinado, que fica guardado como comprovante. Ele não pode ser excluído." };
   }
 
   await prisma.$transaction([

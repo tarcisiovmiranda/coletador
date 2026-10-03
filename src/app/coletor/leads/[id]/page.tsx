@@ -6,6 +6,7 @@ import { escopoLead, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtData, fmtNascimento,
 import { storageConfigurado } from "@/lib/storage";
 import { AppShell } from "@/components/app-shell";
 import { ContratoCard } from "@/components/contrato-card";
+import { AssinaturaCard } from "@/components/assinatura-card";
 import { ExcluirLead } from "@/components/excluir-lead";
 
 export default async function LeadPage({
@@ -22,7 +23,11 @@ export default async function LeadPage({
   // escopo: coletador só abre lead próprio; admin abre qualquer lead do tenant
   const lead = await prisma.lead.findFirst({
     where: { id, ...escopoLead(user) },
-    include: { colaborador: { select: { nome: true } }, contrato: true },
+    include: {
+      colaborador: { select: { nome: true } },
+      contrato: true,
+      assinaturas: { orderBy: { assinadoEm: "desc" }, select: { id: true, assinadoEm: true, signatarioNome: true } },
+    },
   });
   if (!lead) notFound();
 
@@ -83,6 +88,7 @@ export default async function LeadPage({
 
       <div className="mt-4 space-y-4 lg:mt-0">
         <ContratoCard leadId={lead.id} contrato={lead.contrato} />
+        <AssinaturaCard leadId={lead.id} assinaturas={lead.assinaturas} />
 
       <div className="space-y-3">
         {lead.whatsapp && (
