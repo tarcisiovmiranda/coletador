@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { gerarCodigo, hashCodigo } from "../src/lib/codigo";
+import { cifrarCodigo, gerarCodigo, hashCodigo } from "../src/lib/codigo";
 
 const prisma = new PrismaClient();
 
@@ -26,6 +26,7 @@ async function main() {
       nome: process.env.SEED_ADMIN_NOME?.trim() || "Administrador",
       perfil: "ADMIN",
       codigoHash: hashCodigo(codigo),
+      codigoCifrado: cifrarCodigo(codigo),
     },
   });
 

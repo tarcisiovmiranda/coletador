@@ -68,6 +68,9 @@ model Colaborador {
   perfil     Perfil   @default(COLETADOR)
   // HMAC-SHA256 do código pessoal (nunca guardamos o código em claro)
   codigoHash String   @map("codigo_hash")
+  // O mesmo código, cifrado (AES-256-GCM, chave derivada do AUTH_SECRET), só para o admin
+  // rever e reenviar. Nulo nos colaboradores criados antes deste campo existir.
+  codigoCifrado String? @map("codigo_cifrado")
   ativo      Boolean  @default(true)
   // Chave Pix para receber a comissão (só o admin cadastra)
   pixChave   String?  @map("pix_chave")

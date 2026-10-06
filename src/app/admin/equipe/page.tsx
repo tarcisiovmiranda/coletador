@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { mascararChave } from "@/lib/pix";
 import { NovoColaboradorForm } from "./novo-form";
 import { PixForm } from "./pix-form";
+import { CodigoAcesso } from "./codigo-acesso";
 import { desativarColaborador, reativarColaborador } from "./actions";
 
 export default async function EquipePage() {
@@ -11,7 +12,7 @@ export default async function EquipePage() {
   const equipe = await prisma.colaborador.findMany({
     where: { tenantId: admin.tenantId },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-    select: { id: true, nome: true, whatsapp: true, perfil: true, ativo: true, pixChave: true, pixTipo: true },
+    select: { id: true, nome: true, whatsapp: true, perfil: true, ativo: true, pixChave: true, pixTipo: true, codigoCifrado: true },
   });
 
   return (
@@ -44,6 +45,7 @@ export default async function EquipePage() {
                 {c.ativo ? "Ativo" : "Desativado"}
               </span>
             </div>
+            <CodigoAcesso id={c.id} nome={c.nome} temCodigo={c.codigoCifrado != null} />
             <PixForm id={c.id} tipo={c.pixTipo} atual={c.pixChave && c.pixTipo ? mascararChave(c.pixTipo, c.pixChave) : null} />
             {c.id !== admin.id && (
               <form action={c.ativo ? desativarColaborador : reativarColaborador} className="mt-3">

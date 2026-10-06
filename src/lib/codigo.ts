@@ -1,4 +1,4 @@
-import { createHmac, randomInt } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomInt } from "node:crypto";
 import { authSecret } from "./env";
 
 // Sem 0/O/1/I/L para evitar erro de digitação no estande.
@@ -23,4 +23,29 @@ export function normalizarCodigo(entrada: string): string {
  */
 export function hashCodigo(entrada: string): string {
   return createHmac("sha256", authSecret()).update(normalizarCodigo(entrada)).digest("hex");
+}
+
+function chaveCifra(): Buffer {
+  return createHmac("sha256", authSecret()).update("codigo-cifrado-v1").digest();
+}
+
+/** AES-256-GCM. Formato: v1.<iv>.<tag>.<cifrado>, tudo em base64url. */
+export function cifrarCodigo(codigo: string): string {
+  const iv = randomBytes(12);
+  const cifra = createCipheriv("aes-256-gcm", chaveCifra(), iv);
+  const dados = Buffer.concat([cifra.update(codigo, "utf8"), cifra.final()]);
+  return ["v1", iv, cifra.getAuthTag(), dados].map((p) => (typeof p === "string" ? p : p.toString("base64url"))).join(".");
+}
+
+/** Devolve o código em claro, ou null se o valor for inválido ou o AUTH_SECRET mudou. */
+export function decifrarCodigo(valor: string): string | null {
+  try {
+    const [versao, iv, tag, dados] = valor.split(".");
+    if (versao !== "v1" || !iv || !tag || !dados) return null;
+    const decifra = createDecipheriv("aes-256-gcm", chaveCifra(), Buffer.from(iv, "base64url"));
+    decifra.setAuthTag(Buffer.from(tag, "base64url"));
+    return Buffer.concat([decifra.update(Buffer.from(dados, "base64url")), decifra.final()]).toString("utf8");
+  } catch {
+    return null;
+  }
 }
