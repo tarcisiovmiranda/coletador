@@ -136,35 +136,30 @@ function dataValida(v: string) {
 
 // campo ausente/nulo vira "" antes de validar: clientes simples enviam só o que têm
 const bruto = z.preprocess((v) => (v == null ? "" : typeof v === "string" ? v : String(v)), z.string());
-const obrig = (max: number) => bruto.pipe(z.string().trim().min(1, "obrigatório.").max(max, `máximo de ${max} caracteres.`));
 const opt = (max: number) => bruto.pipe(z.string().trim().max(max, `máximo de ${max} caracteres.`));
 
-// Regras de cada campo isoladamente. As que dependem de outros campos (CEP/UF, telefones) vêm depois.
+// Nenhum campo é obrigatório. Se vier preenchido, o formato é conferido (CPF, e-mail, datas…).
+// As regras que dependem de outros campos (CEP/UF, telefones) vêm depois.
 const camposSchema = z.object({
-  nome: obrig(120).refine((v) => v.length >= 2, "informe o nome."),
-  nomeCredencial: obrig(60),
+  nome: opt(120),
+  nomeCredencial: opt(60),
   cpf: bruto
     .pipe(z.string().trim())
     .transform(digitos)
-    .refine((v) => v !== "", "obrigatório.")
     .refine((v) => v === "" || cpfValido(v), "inválido."),
   email: bruto
     .pipe(z.string().trim().toLowerCase().max(120, "máximo de 120 caracteres."))
-    .refine((v) => v !== "", "obrigatório.")
     .refine((v) => v === "" || EMAIL.test(v), "inválido."),
-  sexo: bruto.pipe(z.string().trim()).refine((v) => (SEXOS as readonly string[]).includes(v), "selecione uma opção."),
-  dataNascimento: bruto
-    .pipe(z.string().trim())
-    .refine((v) => v !== "", "obrigatória.")
-    .refine((v) => v === "" || dataValida(v), "inválida ou no futuro."),
-  endereco: obrig(200),
-  numero: obrig(20),
+  sexo: bruto.pipe(z.string().trim()).refine((v) => v === "" || (SEXOS as readonly string[]).includes(v), "selecione uma opção."),
+  dataNascimento: bruto.pipe(z.string().trim()).refine((v) => v === "" || dataValida(v), "inválida ou no futuro."),
+  endereco: opt(200),
+  numero: opt(20),
   complemento: opt(100),
-  bairro: obrig(100),
-  pais: obrig(60),
-  cidade: obrig(100),
-  empresa: obrig(120),
-  cargo: obrig(120),
+  bairro: opt(100),
+  pais: opt(60),
+  cidade: opt(100),
+  empresa: opt(120),
+  cargo: opt(120),
   cnpj: bruto
     .pipe(z.string().trim())
     .transform(digitos)
@@ -180,27 +175,30 @@ const camposSchema = z.object({
   telefoneFixoDdi: opt(8),
 });
 
+/** Nome gravado quando o visitante não informa o nome (a coluna no banco é obrigatória). */
+export const NOME_PADRAO = "Sem nome";
+
 export type DadosLead = {
   nome: string;
-  nomeCredencial: string;
-  cpf: string;
-  email: string;
-  sexo: string;
-  dataNascimento: Date;
+  nomeCredencial: string | null;
+  cpf: string | null;
+  email: string | null;
+  sexo: string | null;
+  dataNascimento: Date | null;
   cep: string | null;
-  endereco: string;
-  numero: string;
+  endereco: string | null;
+  numero: string | null;
   complemento: string | null;
-  bairro: string;
-  pais: string;
+  bairro: string | null;
+  pais: string | null;
   uf: string | null;
-  cidade: string;
-  whatsapp: string;
+  cidade: string | null;
+  whatsapp: string | null;
   whatsappDdi: string;
   telefoneFixo: string | null;
   telefoneFixoDdi: string | null;
-  empresa: string;
-  cargo: string;
+  empresa: string | null;
+  cargo: string | null;
   cnpj: string | null;
   inscricao: string | null;
   observacoes: string | null;
@@ -211,8 +209,8 @@ export type ResultadoLead = { ok: true; data: DadosLead } | { ok: false; erros: 
 
 /**
  * Valida e padroniza os dados de um lead (formulário, edição e fila offline usam esta MESMA regra).
- * Obrigatórios: os marcados com * no formulário de credenciamento. Visitante estrangeiro não precisa
- * de CEP/UF do Brasil. Devolve TODOS os problemas de uma vez, cada um com o campo e a mensagem.
+ * Nenhum campo é obrigatório; só é exigido que pelo menos um venha preenchido, e os que vierem
+ * preenchidos precisam estar no formato certo. Devolve TODOS os problemas de uma vez.
  */
 export function validarLead(entrada: unknown): ResultadoLead {
   const raw = (entrada && typeof entrada === "object" ? entrada : {}) as Record<string, unknown>;
@@ -229,17 +227,15 @@ export function validarLead(entrada: unknown): ResultadoLead {
   const pais = txt("pais");
   const br = ehBrasil(pais);
 
-  // CEP e UF: obrigatórios e no padrão brasileiro só para endereço no Brasil
+  // CEP e UF: no padrão brasileiro só quando o endereço é no Brasil e o campo foi preenchido
   let cep: string | null;
   let uf: string | null;
   if (br) {
     const d = digitos(txt("cep"));
-    if (d === "") marcar("cep", "obrigatório.");
-    else if (d.length !== 8) marcar("cep", "deve ter 8 dígitos.");
+    if (d !== "" && d.length !== 8) marcar("cep", "deve ter 8 dígitos.");
     cep = d || null;
     const u = txt("uf").toUpperCase();
-    if (u === "") marcar("uf", "selecione o estado.");
-    else if (!(UFS as readonly string[]).includes(u)) marcar("uf", "estado inválido.");
+    if (u !== "" && !(UFS as readonly string[]).includes(u)) marcar("uf", "estado inválido.");
     uf = u || null;
   } else {
     cep = txt("cep").slice(0, 20) || null;
@@ -247,48 +243,54 @@ export function validarLead(entrada: unknown): ResultadoLead {
   }
 
   // telefones: o tamanho esperado depende do DDI
-  const tel = (campoNum: string, campoDdi: string, obrigatorio: boolean) => {
-    const ddi = digitos(txt(campoDdi)) || (obrigatorio ? "55" : "");
+  const tel = (campoNum: string, campoDdi: string) => {
+    const ddi = digitos(txt(campoDdi));
     const num = digitos(txt(campoNum));
     if (ddi && (ddi.length > 3 || ddi === "0")) marcar(campoDdi, "inválido.");
-    if (num === "") {
-      if (obrigatorio) marcar(campoNum, "obrigatório.");
-      return { num: null as string | null, ddi: ddi || null };
-    }
+    if (num === "") return { num: null as string | null, ddi: ddi || null };
     const brasil = (ddi || "55") === "55";
     const okTam = brasil ? num.length >= 10 && num.length <= 11 : num.length >= 6 && num.length <= 15;
     if (!okTam) marcar(campoNum, brasil ? "use DDD + número (10 ou 11 dígitos)." : "número inválido.");
     return { num, ddi: ddi || "55" };
   };
-  const cel = tel("whatsapp", "whatsappDdi", true);
-  const fixo = tel("telefoneFixo", "telefoneFixoDdi", false);
+  const cel = tel("whatsapp", "whatsappDdi");
+  const fixo = tel("telefoneFixo", "telefoneFixoDdi");
 
   if (erros.length || !c) return { ok: false, erros };
 
-  const [a, m, d] = c.dataNascimento.split("-").map(Number);
+  // sem nenhuma resposta não há o que salvar (os DDI sozinhos não contam)
+  const algumPreenchido =
+    Object.entries(c).some(([k, v]) => !["whatsappDdi", "telefoneFixoDdi"].includes(k) && v !== "") || cel.num || fixo.num;
+  if (!algumPreenchido) return { ok: false, erros: [{ campo: "nome", mensagem: "Preencha pelo menos um campo." }] };
+
+  let dataNascimento: Date | null = null;
+  if (c.dataNascimento) {
+    const [a, m, d] = c.dataNascimento.split("-").map(Number);
+    dataNascimento = new Date(Date.UTC(a, m - 1, d));
+  }
   return {
     ok: true,
     data: {
-      nome: c.nome,
-      nomeCredencial: c.nomeCredencial,
-      cpf: c.cpf,
-      email: c.email,
-      sexo: c.sexo,
-      dataNascimento: new Date(Date.UTC(a, m - 1, d)),
+      nome: c.nome || NOME_PADRAO,
+      nomeCredencial: vazioParaNulo(c.nomeCredencial),
+      cpf: vazioParaNulo(c.cpf),
+      email: vazioParaNulo(c.email),
+      sexo: vazioParaNulo(c.sexo),
+      dataNascimento,
       cep,
-      endereco: c.endereco,
-      numero: c.numero,
+      endereco: vazioParaNulo(c.endereco),
+      numero: vazioParaNulo(c.numero),
       complemento: vazioParaNulo(c.complemento),
-      bairro: c.bairro,
-      pais: c.pais,
+      bairro: vazioParaNulo(c.bairro),
+      pais: vazioParaNulo(c.pais),
       uf,
-      cidade: c.cidade,
-      whatsapp: cel.num as string,
-      whatsappDdi: cel.ddi as string,
+      cidade: vazioParaNulo(c.cidade),
+      whatsapp: cel.num,
+      whatsappDdi: cel.ddi ?? "55",
       telefoneFixo: fixo.num,
       telefoneFixoDdi: fixo.num ? fixo.ddi : null,
-      empresa: c.empresa,
-      cargo: c.cargo,
+      empresa: vazioParaNulo(c.empresa),
+      cargo: vazioParaNulo(c.cargo),
       cnpj: vazioParaNulo(c.cnpj),
       inscricao: vazioParaNulo(c.inscricao),
       observacoes: vazioParaNulo(c.observacoes),

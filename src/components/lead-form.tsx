@@ -198,7 +198,6 @@ export function LeadForm({
       <section aria-label="Dados do visitante" className="grid gap-3 lg:grid-cols-2">
         <Campo
           label="Nome completo"
-          obrigatorio
           name="nome"
           def={v.nome}
           autoFocus={!editando}
@@ -211,10 +210,10 @@ export function LeadForm({
             }
           }}
         />
-        <Campo label="Nome da empresa" obrigatorio name="empresa" def={v.empresa} />
-        <Campo label="Cargo" obrigatorio name="cargo" def={v.cargo} />
-        <Telefone label="Telefone celular" obrigatorio nomeNum="whatsapp" nomeDdi="whatsappDdi" defNum={v.whatsapp} defDdi={v.whatsappDdi} />
-        <Campo label="E-mail" obrigatorio name="email" def={v.email} type="email" inputMode="email" ph="nome@empresa.com.br" max={120} />
+        <Campo label="Nome da empresa" name="empresa" def={v.empresa} />
+        <Campo label="Cargo" name="cargo" def={v.cargo} />
+        <Telefone label="Telefone celular" nomeNum="whatsapp" nomeDdi="whatsappDdi" defNum={v.whatsapp} defDdi={v.whatsappDdi} />
+        <Campo label="E-mail" name="email" def={v.email} type="email" inputMode="email" ph="nome@empresa.com.br" max={120} />
         <Campo label="CNPJ" name="cnpj" def={v.cnpj} inputMode="numeric" ph="00.000.000/0000-00" mask={maskCnpj} max={18} />
         <Campo label="Nº de inscrição" name="inscricao" def={v.inscricao} />
       </section>
@@ -226,17 +225,15 @@ export function LeadForm({
       >
         <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-base font-bold text-slate-800">
           <span>Dados completos (credenciamento)</span>
-          <span className="text-xs font-semibold text-slate-500">tem campos obrigatórios *</span>
         </summary>
         <div className="grid gap-3 border-t border-slate-200 p-4 lg:grid-cols-2">
-          <Campo label="CPF" obrigatorio name="cpf" def={v.cpf} inputMode="numeric" ph="000.000.000-00" mask={maskCpf} max={14} />
-          <Campo label="Nome na credencial" obrigatorio name="nomeCredencial" def={v.nomeCredencial} ph="Como será impresso no crachá" max={60} />
-          <Selecao label="Sexo" obrigatorio name="sexo" def={v.sexo} opcoes={[...SEXOS]} />
-          <Campo label="Data de nascimento" obrigatorio name="dataNascimento" def={v.dataNascimento} type="date" />
+          <Campo label="CPF" name="cpf" def={v.cpf} inputMode="numeric" ph="000.000.000-00" mask={maskCpf} max={14} />
+          <Campo label="Nome na credencial" name="nomeCredencial" def={v.nomeCredencial} ph="Como será impresso no crachá" max={60} />
+          <Selecao label="Sexo" name="sexo" def={v.sexo} opcoes={[...SEXOS]} />
+          <Campo label="Data de nascimento" name="dataNascimento" def={v.dataNascimento} type="date" />
           <div>
             <Campo
               label="CEP"
-              obrigatorio
               name="cep"
               def={v.cep}
               inputMode="numeric"
@@ -250,18 +247,18 @@ export function LeadForm({
             />
             {cepMsg && <p className="mt-1 text-xs font-medium text-slate-500">{cepMsg}</p>}
           </div>
-          <Campo label="Endereço" obrigatorio name="endereco" def={v.endereco} max={200} />
-          <Campo label="Número" obrigatorio name="numero" def={v.numero} max={20} />
+          <Campo label="Endereço" name="endereco" def={v.endereco} max={200} />
+          <Campo label="Número" name="numero" def={v.numero} max={20} />
           <Campo label="Complemento" name="complemento" def={v.complemento} max={100} />
-          <Campo label="Bairro" obrigatorio name="bairro" def={v.bairro} max={100} />
-          <Campo label="País" obrigatorio name="pais" def={v.pais} max={60} lista="lista-paises" />
+          <Campo label="Bairro" name="bairro" def={v.bairro} max={100} />
+          <Campo label="País" name="pais" def={v.pais} max={60} lista="lista-paises" />
           <datalist id="lista-paises">
             {PAISES.map((p) => (
               <option key={p} value={p} />
             ))}
           </datalist>
-          <Selecao label="UF" obrigatorio name="uf" def={v.uf} opcoes={[...UFS]} />
-          <Campo label="Cidade" obrigatorio name="cidade" def={v.cidade} max={100} />
+          <Selecao label="UF" name="uf" def={v.uf} opcoes={[...UFS]} />
+          <Campo label="Cidade" name="cidade" def={v.cidade} max={100} />
           <Telefone label="Telefone fixo" nomeNum="telefoneFixo" nomeDdi="telefoneFixoDdi" defNum={v.telefoneFixo} defDdi={v.telefoneFixoDdi} />
         </div>
       </details>
