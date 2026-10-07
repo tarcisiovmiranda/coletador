@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { intervaloCriacao } from "@/lib/datas";
-import { ETAPA_KEYS, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtNascimento, fmtWhats } from "@/lib/leads";
+import { fmtCep, fmtCnpj, fmtCpf, fmtNascimento, fmtWhats } from "@/lib/leads";
 
 // Evita injeção de fórmula ao abrir no Excel/Sheets (=, +, -, @, tab, CR no início).
 function celula(v: string | null | undefined) {
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   if (user.perfil !== "ADMIN") return new Response("Acesso negado.", { status: 403 });
 
   const sp = new URL(req.url).searchParams;
-  const etapa = ETAPA_KEYS.find((k) => k === sp.get("etapa"));
+  const etapa = sp.get("etapa") ?? undefined;
   const colaboradorId = sp.get("colaborador") ?? undefined;
   const periodo = intervaloCriacao(sp.get("de") ?? undefined, sp.get("ate") ?? undefined);
   if (!periodo.ok) return new Response(periodo.erro, { status: 400 });
@@ -32,11 +32,11 @@ export async function GET(req: Request) {
     where: {
       tenantId: user.tenantId,
       ...(colaboradorId ? { colaboradorId } : {}),
-      ...(etapa ? { etapaKanban: etapa } : {}),
+      ...(etapa ? { etapaId: etapa } : {}),
       ...(periodo.where ? { createdAt: periodo.where } : {}),
     },
     orderBy: { createdAt: "asc" },
-    include: { colaborador: { select: { nome: true } } },
+    include: { colaborador: { select: { nome: true } }, etapa: { select: { nome: true } } },
   });
 
   const cab = ["Data", "Coletador", "Nome", "Cargo", "Empresa", "CNPJ", "Celular (DDI)", "Celular", "Telefone fixo (DDI)", "Telefone fixo", "E-mail", "CPF", "Nome na credencial", "Sexo", "Nascimento", "CEP", "Endereço", "Número", "Complemento", "Bairro", "Cidade", "UF", "País", "Inscrição", "Etapa", "Áudio", "Observações"];
@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       l.uf,
       l.pais,
       l.inscricao,
-      etapaInfo(l.etapaKanban).label,
+      l.etapa.nome,
       l.audioKey ? "Sim" : "Não",
       l.observacoes,
     ]

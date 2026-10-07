@@ -17,7 +17,7 @@ export default async function ColetorHome() {
       nome: true,
       empresa: true,
       cargo: true,
-      etapaKanban: true,
+      etapa: { select: { nome: true, cor: true } },
       audioKey: true,
       createdAt: true,
     },

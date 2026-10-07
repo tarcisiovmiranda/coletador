@@ -1,13 +1,13 @@
 import Link from "next/link";
-import type { EtapaKanban } from "@prisma/client";
-import { etapaInfo, fmtData } from "@/lib/leads";
+import { fmtData } from "@/lib/leads";
+import { classesCor } from "@/lib/etapas-cores";
 
 export type ItemLead = {
   id: string;
   nome: string;
   empresa: string | null;
   cargo: string | null;
-  etapaKanban: EtapaKanban;
+  etapa: { nome: string; cor: string };
   audioKey: string | null;
   createdAt: Date;
   colaborador?: { nome: string };
@@ -20,7 +20,6 @@ export function LeadList({ leads, vazio }: { leads: ItemLead[]; vazio: string })
   return (
     <ul className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
       {leads.map((l) => {
-        const e = etapaInfo(l.etapaKanban);
         return (
           <li key={l.id}>
             <Link href={`/coletor/leads/${l.id}`} className="card block active:bg-slate-50">
@@ -31,8 +30,8 @@ export function LeadList({ leads, vazio }: { leads: ItemLead[]; vazio: string })
                     {[l.cargo, l.empresa].filter(Boolean).join(" · ") || "Sem empresa"}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${e.cor}`}>
-                  {e.label}
+                <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${classesCor(l.etapa.cor)}`}>
+                  {l.etapa.nome}
                 </span>
               </div>
               <p className="mt-2 text-xs text-slate-400">

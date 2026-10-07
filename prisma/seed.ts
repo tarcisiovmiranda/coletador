@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { ETAPAS_PADRAO } from "../src/lib/etapas-padrao";
 import { cifrarCodigo, gerarCodigo, hashCodigo } from "../src/lib/codigo";
 
 const prisma = new PrismaClient();
@@ -10,6 +11,10 @@ async function main() {
     update: {},
     create: { slug, nome: "FISP 2026 — Estande C93B" },
   });
+
+  if ((await prisma.etapa.count({ where: { tenantId: tenant.id } })) === 0) {
+    await prisma.etapa.createMany({ data: ETAPAS_PADRAO.map((e, ordem) => ({ tenantId: tenant.id, ordem, ...e })) });
+  }
 
   const jaTemAdmin = await prisma.colaborador.findFirst({
     where: { tenantId: tenant.id, perfil: "ADMIN" },

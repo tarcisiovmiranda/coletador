@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { ETAPAS, ETAPA_KEYS } from "@/lib/leads";
+import { listarEtapas } from "@/lib/etapas";
 import { intervaloCriacao } from "@/lib/datas";
 import { AppShell } from "@/components/app-shell";
 import { LeadList } from "@/components/lead-list";
@@ -13,10 +13,13 @@ export default async function AdminLeads({
 }) {
   const admin = await requireAdmin();
   const sp = await searchParams;
-  const etapa = ETAPA_KEYS.find((k) => k === sp.etapa);
   const q = sp.q?.trim().slice(0, 80);
   const periodo = intervaloCriacao(sp.de, sp.ate);
   const criadoEm = periodo.ok ? periodo.where : undefined;
+
+  const etapas = await listarEtapas(admin.tenantId);
+  // só aceita etapa do tenant (valida o parâmetro da URL)
+  const etapa = etapas.find((e) => e.id === sp.etapa)?.id;
 
   const equipe = await prisma.colaborador.findMany({
     where: { tenantId: admin.tenantId },
@@ -30,7 +33,7 @@ export default async function AdminLeads({
     where: {
       tenantId: admin.tenantId,
       ...(colab ? { colaboradorId: colab } : {}),
-      ...(etapa ? { etapaKanban: etapa } : {}),
+      ...(etapa ? { etapaId: etapa } : {}),
       ...(criadoEm ? { createdAt: criadoEm } : {}),
       ...(q
         ? {
@@ -52,7 +55,7 @@ export default async function AdminLeads({
       nome: true,
       empresa: true,
       cargo: true,
-      etapaKanban: true,
+      etapa: { select: { nome: true, cor: true } },
       audioKey: true,
       createdAt: true,
       colaborador: { select: { nome: true } },
@@ -80,9 +83,9 @@ export default async function AdminLeads({
         </select>
         <select name="etapa" defaultValue={etapa ?? ""} className="field">
           <option value="">Todas as etapas</option>
-          {ETAPAS.map((e) => (
-            <option key={e.key} value={e.key}>
-              {e.label}
+          {etapas.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.nome}
             </option>
           ))}
         </select>

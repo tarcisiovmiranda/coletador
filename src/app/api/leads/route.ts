@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { validarLead } from "@/lib/leads";
+import { etapaInicialId } from "@/lib/etapas";
 
 const envelope = z.object({
   clientId: z.string().uuid(),
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
         tenantId: user.tenantId,
         colaboradorId: user.id,
         clientId: env.data.clientId,
+        etapaId: await etapaInicialId(user.tenantId),
       },
       select: { id: true },
     });

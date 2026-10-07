@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { removerAudio } from "@/lib/storage";
-import { CAMPOS_LEAD, ETAPA_KEYS, escopoLead, validarLead } from "@/lib/leads";
+import { CAMPOS_LEAD, escopoLead, validarLead } from "@/lib/leads";
 
 export type LeadResult = { ok: true; id: string } | { ok: false; erro: string };
 
@@ -28,15 +28,18 @@ export async function atualizarLead(id: string, formData: FormData): Promise<Lea
   return { ok: true, id };
 }
 
-const moverSchema = z.object({ id: z.string().min(1), etapa: z.enum(ETAPA_KEYS) });
+const moverSchema = z.object({ id: z.string().min(1), etapa: z.string().min(1) });
 
 export async function moverEtapa(formData: FormData) {
   const user = await requireUser();
   const parsed = moverSchema.safeParse({ id: formData.get("id"), etapa: formData.get("etapa") });
   if (!parsed.success) return;
+  // a etapa precisa ser do mesmo tenant do usuário
+  const etapa = await prisma.etapa.findFirst({ where: { id: parsed.data.etapa, tenantId: user.tenantId }, select: { id: true } });
+  if (!etapa) return;
   await prisma.lead.updateMany({
     where: { id: parsed.data.id, ...escopoLead(user) },
-    data: { etapaKanban: parsed.data.etapa },
+    data: { etapaId: etapa.id },
   });
   revalidatePath("/coletor", "layout");
   revalidatePath("/admin", "layout");

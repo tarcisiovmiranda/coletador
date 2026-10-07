@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { ETAPAS } from "@/lib/leads";
+import { listarEtapas } from "@/lib/etapas";
 import { fmtCents, toCents } from "@/lib/dinheiro";
 import { AppShell } from "@/components/app-shell";
 
@@ -18,6 +18,7 @@ const rotuloDia = (d: Date) =>
 export default async function AdminPainel() {
   const admin = await requireAdmin();
   const where = { tenantId: admin.tenantId };
+  const etapas = await listarEtapas(admin.tenantId);
 
   const hoje = inicioDoDiaBRT(new Date());
   const seteDias = new Date(hoje.getTime() - 6 * 24 * 60 * 60 * 1000);
@@ -26,7 +27,7 @@ export default async function AdminPainel() {
     prisma.lead.count({ where }),
     prisma.lead.count({ where: { ...where, createdAt: { gte: hoje } } }),
     prisma.lead.count({ where: { ...where, audioKey: { not: null } } }),
-    prisma.lead.groupBy({ by: ["etapaKanban"], where, _count: { _all: true } }),
+    prisma.lead.groupBy({ by: ["etapaId"], where, _count: { _all: true } }),
     prisma.lead.groupBy({ by: ["colaboradorId"], where, _count: { _all: true } }),
     prisma.colaborador.findMany({ where, select: { id: true, nome: true, ativo: true } }),
     prisma.lead.findMany({ where: { ...where, createdAt: { gte: seteDias } }, select: { createdAt: true } }),
@@ -44,7 +45,7 @@ export default async function AdminPainel() {
     } else if (c.status === "PENDENTE") pendentes += 1;
   }
 
-  const etapaCount = new Map(porEtapa.map((e) => [e.etapaKanban, e._count._all]));
+  const etapaCount = new Map(porEtapa.map((e) => [e.etapaId, e._count._all]));
   const nomes = new Map(equipe.map((c) => [c.id, c]));
   const ranking = porColab
     .map((r) => ({ nome: nomes.get(r.colaboradorId)?.nome ?? "—", n: r._count._all }))
@@ -87,10 +88,10 @@ export default async function AdminPainel() {
 
       <h2 className="mb-2 mt-6 text-lg font-bold text-slate-900">Funil</h2>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {ETAPAS.map((e) => (
-          <div key={e.key} className={`rounded-2xl px-4 py-3 ${e.cor}`}>
-            <p className="text-2xl font-extrabold">{etapaCount.get(e.key) ?? 0}</p>
-            <p className="text-sm font-semibold">{e.label}</p>
+        {etapas.map((e) => (
+          <div key={e.id} className={`rounded-2xl px-4 py-3 ${e.classes}`}>
+            <p className="text-2xl font-extrabold">{etapaCount.get(e.id) ?? 0}</p>
+            <p className="text-sm font-semibold">{e.nome}</p>
           </div>
         ))}
       </div>

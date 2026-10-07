@@ -13,15 +13,6 @@ enum Perfil {
   COLETADOR
 }
 
-enum EtapaKanban {
-  NOVO
-  CONTATO
-  REUNIAO
-  PROPOSTA
-  FECHADO
-  PERDIDO
-}
-
 enum PixTipo {
   CPF
   CNPJ
@@ -44,44 +35,45 @@ enum ContratoStatus {
 }
 
 model Tenant {
-  id                 String              @id @default(cuid())
-  slug               String              @unique
+  id                 String               @id @default(cuid())
+  slug               String               @unique
   nome               String
   // Comissão (%) aplicada sobre o valor de cada contrato novo
-  comissaoPercentual Decimal             @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
-  createdAt          DateTime            @default(now())
+  comissaoPercentual Decimal              @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
+  createdAt          DateTime             @default(now())
   colaboradores      Colaborador[]
   leads              Lead[]
   contratos          Contrato[]
   pagamentos         PagamentoComissao[]
   modelosContrato    ModeloContrato[]
   assinaturas        AssinaturaContrato[]
+  etapas             Etapa[]
 
   @@map("tenants")
 }
 
 model Colaborador {
-  id         String   @id @default(cuid())
-  tenantId   String   @map("tenant_id")
-  nome       String
-  whatsapp   String?
-  perfil     Perfil   @default(COLETADOR)
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  nome          String
+  whatsapp      String?
+  perfil        Perfil   @default(COLETADOR)
   // HMAC-SHA256 do código pessoal (nunca guardamos o código em claro)
-  codigoHash String   @map("codigo_hash")
+  codigoHash    String   @map("codigo_hash")
   // O mesmo código, cifrado (AES-256-GCM, chave derivada do AUTH_SECRET), só para o admin
   // rever e reenviar. Nulo nos colaboradores criados antes deste campo existir.
-  codigoCifrado String? @map("codigo_cifrado")
-  ativo      Boolean  @default(true)
+  codigoCifrado String?  @map("codigo_cifrado")
+  ativo         Boolean  @default(true)
   // Chave Pix para receber a comissão (só o admin cadastra)
-  pixChave   String?  @map("pix_chave")
-  pixTipo    PixTipo? @map("pix_tipo")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  pixChave      String?  @map("pix_chave")
+  pixTipo       PixTipo? @map("pix_tipo")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  tenant     Tenant              @relation(fields: [tenantId], references: [id])
-  leads      Lead[]
-  contratos  Contrato[]
-  pagamentos PagamentoComissao[]
+  tenant      Tenant               @relation(fields: [tenantId], references: [id])
+  leads       Lead[]
+  contratos   Contrato[]
+  pagamentos  PagamentoComissao[]
   assinaturas AssinaturaContrato[]
 
   @@unique([tenantId, codigoHash])
@@ -89,24 +81,44 @@ model Colaborador {
   @@map("colaboradores")
 }
 
+// Colunas do kanban, editáveis pelo admin (criar, renomear, trocar cor, reordenar; não exclui).
+model Etapa {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  nome       String
+  // Chave da paleta fixa em src/lib/etapas-cores.ts (o Tailwind só compila classes escritas no código)
+  cor        String
+  ordem      Int
+  // A etapa para onde o lead vai quando o contrato é aprovado
+  fechamento Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  leads  Lead[]
+
+  @@unique([tenantId, nome])
+  @@index([tenantId, ordem])
+  @@map("etapas")
+}
+
 model Lead {
-  id              String      @id @default(cuid())
-  tenantId        String      @map("tenant_id")
-  colaboradorId   String      @map("colaborador_id")
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  colaboradorId   String    @map("colaborador_id")
   nome            String
   cargo           String?
   empresa         String?
   inscricao       String?
   whatsapp        String?
-  whatsappDdi     String      @default("55") @map("whatsapp_ddi")
-  telefoneFixo    String?     @map("telefone_fixo")
-  telefoneFixoDdi String?     @map("telefone_fixo_ddi")
+  whatsappDdi     String    @default("55") @map("whatsapp_ddi")
+  telefoneFixo    String?   @map("telefone_fixo")
+  telefoneFixoDdi String?   @map("telefone_fixo_ddi")
   email           String?
   // Dados de credenciamento (formulário da feira)
   cpf             String?
-  nomeCredencial  String?     @map("nome_credencial")
+  nomeCredencial  String?   @map("nome_credencial")
   sexo            String?
-  dataNascimento  DateTime?   @map("data_nascimento") @db.Date
+  dataNascimento  DateTime? @map("data_nascimento") @db.Date
   cep             String?
   endereco        String?
   numero          String?
@@ -116,24 +128,25 @@ model Lead {
   uf              String?
   cidade          String?
   cnpj            String?
-  etapaKanban     EtapaKanban @default(NOVO) @map("etapa_kanban")
-  audioKey        String?     @map("audio_key")
-  audioMime       String?     @map("audio_mime")
+  etapaId         String    @map("etapa_id")
+  audioKey        String?   @map("audio_key")
+  audioMime       String?   @map("audio_mime")
   // Gerado no aparelho: garante que reenviar o mesmo lead (rede instável) não duplica
-  clientId        String?     @map("client_id")
+  clientId        String?   @map("client_id")
   observacoes     String?
   // Preenchido pelo servidor (nunca pelo cliente)
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  tenant      Tenant      @relation(fields: [tenantId], references: [id])
-  colaborador Colaborador @relation(fields: [colaboradorId], references: [id])
+  tenant      Tenant               @relation(fields: [tenantId], references: [id])
+  colaborador Colaborador          @relation(fields: [colaboradorId], references: [id])
+  etapa       Etapa                @relation(fields: [etapaId], references: [id])
   contrato    Contrato?
   assinaturas AssinaturaContrato[]
 
   @@unique([tenantId, clientId])
   @@index([tenantId, colaboradorId])
-  @@index([tenantId, etapaKanban])
+  @@index([tenantId, etapaId])
   @@map("leads")
 }
 

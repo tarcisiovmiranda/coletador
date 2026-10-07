@@ -1,27 +1,27 @@
 import Link from "next/link";
-import type { EtapaKanban } from "@prisma/client";
 import { moverEtapa } from "@/app/coletor/actions";
-import { ETAPAS, fmtData } from "@/lib/leads";
+import type { EtapaView } from "@/lib/etapas";
+import { fmtData } from "@/lib/leads";
 
 export type CardLead = {
   id: string;
   nome: string;
   empresa: string | null;
-  etapaKanban: EtapaKanban;
+  etapaId: string;
   createdAt: Date;
   colaborador?: string;
 };
 
 /** Kanban sem arrastar (uso em pé, com uma mão): cada card tem um seletor de etapa. */
-export function KanbanBoard({ leads }: { leads: CardLead[] }) {
+export function KanbanBoard({ etapas, leads }: { etapas: EtapaView[]; leads: CardLead[] }) {
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 2xl:grid-cols-6">
-      {ETAPAS.map((e) => {
-        const lista = leads.filter((l) => l.etapaKanban === e.key);
+    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 2xl:grid-cols-4">
+      {etapas.map((e) => {
+        const lista = leads.filter((l) => l.etapaId === e.id);
         return (
-          <section key={e.key} className="w-[82vw] shrink-0 snap-center md:w-auto">
-            <h2 className={`mb-2 flex items-center justify-between rounded-xl px-3 py-2 text-base font-bold ${e.cor}`}>
-              {e.label}
+          <section key={e.id} className="w-[82vw] shrink-0 snap-center md:w-auto">
+            <h2 className={`mb-2 flex items-center justify-between rounded-xl px-3 py-2 text-base font-bold ${e.classes}`}>
+              {e.nome}
               <span className="rounded-full bg-white/70 px-2 text-sm">{lista.length}</span>
             </h2>
             <ul className="space-y-2">
@@ -38,12 +38,12 @@ export function KanbanBoard({ leads }: { leads: CardLead[] }) {
                     <input type="hidden" name="id" value={l.id} />
                     <select
                       name="etapa"
-                      defaultValue={l.etapaKanban}
+                      defaultValue={l.etapaId}
                       className="min-h-12 min-w-0 flex-1 rounded-xl border-2 border-slate-300 bg-white px-2 text-base"
                     >
-                      {ETAPAS.map((o) => (
-                        <option key={o.key} value={o.key}>
-                          {o.label}
+                      {etapas.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.nome}
                         </option>
                       ))}
                     </select>

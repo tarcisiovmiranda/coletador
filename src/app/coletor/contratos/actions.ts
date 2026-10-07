@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { escopoLead } from "@/lib/leads";
+import { etapaFechamentoId } from "@/lib/etapas";
 import { PAGAMENTOS } from "@/lib/contratos";
 import {
   bpsToDecimal,
@@ -88,6 +89,9 @@ export async function salvarContrato(leadId: string, formData: FormData): Promis
     return { ok: true, id: existente.id };
   }
 
+  // etapa de fechamento do tenant (o admin pode ter renomeado); sem ela o lead só não muda de coluna
+  const fechamentoId = await etapaFechamentoId(user.tenantId);
+
   try {
     const [contrato] = await prisma.$transaction([
       prisma.contrato.create({
@@ -100,7 +104,7 @@ export async function salvarContrato(leadId: string, formData: FormData): Promis
         },
         select: { id: true },
       }),
-      prisma.lead.update({ where: { id: leadId }, data: { etapaKanban: "FECHADO" } }),
+      ...(fechamentoId ? [prisma.lead.update({ where: { id: leadId }, data: { etapaId: fechamentoId } })] : []),
     ]);
     revalidar(leadId);
     return { ok: true, id: contrato.id };

@@ -1,18 +1,6 @@
 import { z } from "zod";
-import type { EtapaKanban, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { SessionUser } from "./session";
-
-export const ETAPAS: { key: EtapaKanban; label: string; cor: string }[] = [
-  { key: "NOVO", label: "Novo", cor: "bg-slate-200 text-slate-800" },
-  { key: "CONTATO", label: "Em contato", cor: "bg-sky-100 text-sky-800" },
-  { key: "REUNIAO", label: "Reunião", cor: "bg-violet-100 text-violet-800" },
-  { key: "PROPOSTA", label: "Proposta", cor: "bg-amber-100 text-amber-800" },
-  { key: "FECHADO", label: "Fechado", cor: "bg-emerald-100 text-emerald-800" },
-  { key: "PERDIDO", label: "Perdido", cor: "bg-red-100 text-red-800" },
-];
-
-export const etapaInfo = (k: EtapaKanban) => ETAPAS.find((e) => e.key === k)!;
-export const ETAPA_KEYS = ETAPAS.map((e) => e.key) as [EtapaKanban, ...EtapaKanban[]];
 
 /**
  * Filtro de isolamento: TODA consulta de lead por id passa por aqui.

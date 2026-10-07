@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { escopoLead, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtData, fmtNascimento, fmtWhats, linkWhats } from "@/lib/leads";
+import { escopoLead, fmtCep, fmtCnpj, fmtCpf, fmtData, fmtNascimento, fmtWhats, linkWhats } from "@/lib/leads";
+import { classesCor } from "@/lib/etapas-cores";
 import { storageConfigurado } from "@/lib/storage";
 import { AppShell } from "@/components/app-shell";
 import { ContratoCard } from "@/components/contrato-card";
@@ -25,13 +26,12 @@ export default async function LeadPage({
     where: { id, ...escopoLead(user) },
     include: {
       colaborador: { select: { nome: true } },
+      etapa: { select: { nome: true, cor: true } },
       contrato: true,
       assinaturas: { orderBy: { assinadoEm: "desc" }, select: { id: true, assinadoEm: true, signatarioNome: true } },
     },
   });
   if (!lead) notFound();
-
-  const e = etapaInfo(lead.etapaKanban);
 
   return (
     <AppShell user={user} title={lead.nome}>
@@ -43,7 +43,7 @@ export default async function LeadPage({
       <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-6">
       <div className="card space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${e.cor}`}>{e.label}</span>
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${classesCor(lead.etapa.cor)}`}>{lead.etapa.nome}</span>
           <span className="text-sm text-slate-500">
             {fmtData(lead.createdAt)} · {lead.colaborador.nome}
           </span>
