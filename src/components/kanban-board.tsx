@@ -15,16 +15,18 @@ export type CardLead = {
 /** Kanban sem arrastar (uso em pé, com uma mão): cada card tem um seletor de etapa. */
 export function KanbanBoard({ etapas, leads }: { etapas: EtapaView[]; leads: CardLead[] }) {
   return (
-    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 2xl:grid-cols-4">
+    // Colunas lado a lado, com barra de rolagem horizontal sempre visível no pé da tela;
+    // cada coluna rola na vertical por dentro, então a barra não fica perdida no fim de uma lista longa.
+    <div className="kanban-scroll -mx-4 flex h-[calc(100dvh-15rem)] min-h-96 snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:mx-0 md:snap-none md:px-0">
       {etapas.map((e) => {
         const lista = leads.filter((l) => l.etapaId === e.id);
         return (
-          <section key={e.id} className="w-[82vw] shrink-0 snap-center md:w-auto">
-            <h2 className={`mb-2 flex items-center justify-between rounded-xl px-3 py-2 text-base font-bold ${e.classes}`}>
+          <section key={e.id} className="flex w-[82vw] shrink-0 snap-center flex-col md:w-80 md:snap-align-none">
+            <h2 className={`mb-2 flex shrink-0 items-center justify-between rounded-xl px-3 py-2 text-base font-bold ${e.classes}`}>
               {e.nome}
               <span className="rounded-full bg-white/70 px-2 text-sm">{lista.length}</span>
             </h2>
-            <ul className="space-y-2">
+            <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {lista.map((l) => (
                 <li key={l.id} className="card !p-3">
                   <Link href={`/coletor/leads/${l.id}`} className="block">
