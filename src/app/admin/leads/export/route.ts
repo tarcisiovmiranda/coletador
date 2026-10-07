@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { intervaloCriacao } from "@/lib/datas";
 import { ETAPA_KEYS, etapaInfo, fmtCep, fmtCnpj, fmtCpf, fmtNascimento, fmtWhats } from "@/lib/leads";
 
 // Evita injeção de fórmula ao abrir no Excel/Sheets (=, +, -, @, tab, CR no início).
@@ -24,12 +25,15 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
   const etapa = ETAPA_KEYS.find((k) => k === sp.get("etapa"));
   const colaboradorId = sp.get("colaborador") ?? undefined;
+  const periodo = intervaloCriacao(sp.get("de") ?? undefined, sp.get("ate") ?? undefined);
+  if (!periodo.ok) return new Response(periodo.erro, { status: 400 });
 
   const leads = await prisma.lead.findMany({
     where: {
       tenantId: user.tenantId,
       ...(colaboradorId ? { colaboradorId } : {}),
       ...(etapa ? { etapaKanban: etapa } : {}),
+      ...(periodo.where ? { createdAt: periodo.where } : {}),
     },
     orderBy: { createdAt: "asc" },
     include: { colaborador: { select: { nome: true } } },

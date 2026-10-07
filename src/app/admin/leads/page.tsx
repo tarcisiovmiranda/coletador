@@ -2,18 +2,21 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { ETAPAS, ETAPA_KEYS } from "@/lib/leads";
+import { intervaloCriacao } from "@/lib/datas";
 import { AppShell } from "@/components/app-shell";
 import { LeadList } from "@/components/lead-list";
 
 export default async function AdminLeads({
   searchParams,
 }: {
-  searchParams: Promise<{ colaborador?: string; etapa?: string; q?: string }>;
+  searchParams: Promise<{ colaborador?: string; etapa?: string; q?: string; de?: string; ate?: string }>;
 }) {
   const admin = await requireAdmin();
   const sp = await searchParams;
   const etapa = ETAPA_KEYS.find((k) => k === sp.etapa);
   const q = sp.q?.trim().slice(0, 80);
+  const periodo = intervaloCriacao(sp.de, sp.ate);
+  const criadoEm = periodo.ok ? periodo.where : undefined;
 
   const equipe = await prisma.colaborador.findMany({
     where: { tenantId: admin.tenantId },
@@ -28,6 +31,7 @@ export default async function AdminLeads({
       tenantId: admin.tenantId,
       ...(colab ? { colaboradorId: colab } : {}),
       ...(etapa ? { etapaKanban: etapa } : {}),
+      ...(criadoEm ? { createdAt: criadoEm } : {}),
       ...(q
         ? {
             OR: [
@@ -58,6 +62,8 @@ export default async function AdminLeads({
   const exportQs = new URLSearchParams({
     ...(colab ? { colaborador: colab } : {}),
     ...(etapa ? { etapa } : {}),
+    ...(periodo.ok && sp.de ? { de: sp.de } : {}),
+    ...(periodo.ok && sp.ate ? { ate: sp.ate } : {}),
   }).toString();
 
   return (
@@ -80,6 +86,16 @@ export default async function AdminLeads({
             </option>
           ))}
         </select>
+        <div className="grid grid-cols-2 gap-3 lg:col-span-3 lg:max-w-lg">
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold text-slate-700">Criado de</span>
+            <input type="date" name="de" defaultValue={sp.de ?? ""} className="field" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold text-slate-700">Até</span>
+            <input type="date" name="ate" defaultValue={sp.ate ?? ""} className="field" />
+          </label>
+        </div>
         <div className="flex gap-2">
           <button type="submit" className="btn btn-primary flex-1">
             Filtrar
@@ -89,6 +105,12 @@ export default async function AdminLeads({
           </Link>
         </div>
       </form>
+
+      {!periodo.ok && (
+        <p role="alert" className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-base font-medium text-amber-800">
+          {periodo.erro} O filtro de datas foi ignorado.
+        </p>
+      )}
 
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-slate-600">
