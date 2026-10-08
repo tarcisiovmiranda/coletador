@@ -160,7 +160,7 @@ export function KanbanBoard({ etapas, leads }: { etapas: EtapaView[]; leads: Car
                 {e.nome}
                 <span className="rounded-full bg-white/70 px-2 text-sm">{cards.length}</span>
               </h2>
-              <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-1">
                 {cards.map((l) => (
                   <li
                     key={l.id}
