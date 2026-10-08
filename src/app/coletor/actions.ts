@@ -45,6 +45,35 @@ export async function moverEtapa(formData: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+const MAX_LOTE = 200;
+const loteSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(MAX_LOTE),
+  etapaId: z.string().min(1),
+});
+
+export type MoverLoteResult = { ok: true; movidos: number } | { ok: false; erro: string };
+
+/** Move vários leads de uma vez (arrastar no kanban ou barra de seleção). Mesmo escopo de moverEtapa. */
+export async function moverLeads(ids: string[], etapaId: string): Promise<MoverLoteResult> {
+  const user = await requireUser();
+  const parsed = loteSchema.safeParse({ ids, etapaId });
+  if (!parsed.success) return { ok: false, erro: `Selecione de 1 a ${MAX_LOTE} leads.` };
+
+  // a etapa precisa ser do mesmo tenant do usuário
+  const etapa = await prisma.etapa.findFirst({ where: { id: parsed.data.etapaId, tenantId: user.tenantId }, select: { id: true } });
+  if (!etapa) return { ok: false, erro: "Etapa não encontrada." };
+
+  // coletador só move os próprios leads; admin move qualquer um do tenant
+  const r = await prisma.lead.updateMany({
+    where: { id: { in: parsed.data.ids }, ...escopoLead(user) },
+    data: { etapaId: etapa.id },
+  });
+  if (r.count === 0) return { ok: false, erro: "Nenhum lead encontrado para mover." };
+  revalidatePath("/coletor", "layout");
+  revalidatePath("/admin", "layout");
+  return { ok: true, movidos: r.count };
+}
+
 export type ExcluirResult = { ok: true } | { ok: false; erro: string };
 
 /**
